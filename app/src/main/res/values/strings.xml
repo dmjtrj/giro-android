@@ -2,26 +2,70 @@
 <resources>
     <string name="app_name">Сигналы движения</string>
 
-    <string name="cues_switch">Сигналы движения</string>
-    <string name="cues_summary">Точки по краям экрана повторяют движение машины и помогают меньше укачиваться</string>
-    <string name="overlay_permission_needed">Разрешите показ поверх других приложений, чтобы точки были видны везде</string>
+    <!-- Главный экран -->
+    <string name="power_turn_on">Включить сигналы движения</string>
+    <string name="power_turn_off">Выключить сигналы движения</string>
+    <string name="cues_summary">Точки по краям экрана повторяют разгон, торможение и повороты машины. Глаза видят движение, которое чувствует тело, — и укачивает меньше.</string>
     <string name="sensors_unsupported">На этом устройстве нет нужных датчиков движения</string>
+    <string name="preview_description">Превью точек</string>
+    <string name="settings_title">Настройки</string>
 
-    <string name="haptics_switch">Виброотклик</string>
+    <!-- Онбординг разрешения -->
+    <string name="overlay_dialog_title">Показ поверх приложений</string>
+    <string name="overlay_dialog_message">Точки рисуются поверх других приложений — для этого нужно разрешение.\n\nВ открывшемся списке найдите «Сигналы движения» и включите «Разрешить показ поверх других приложений». Затем вернитесь сюда — эффект включится сам.</string>
+    <string name="overlay_dialog_open">Открыть настройки</string>
+    <string name="overlay_dialog_later">Не сейчас</string>
 
-    <string name="theme_title">Оформление</string>
-    <string name="theme_light">Светлая</string>
-    <string name="theme_dark">Тёмная</string>
-    <string name="theme_monet">Monet</string>
+    <!-- Экран настроек -->
+    <string name="section_dots">Точки</string>
+    <string name="section_motion">Движение</string>
+    <string name="section_appearance">Оформление</string>
+    <string name="section_feedback">Отклик</string>
 
-    <string name="dot_color_title">Цвет точек</string>
+    <string name="dot_color_title">Цвет</string>
     <string name="dot_color_auto">Авто</string>
     <string name="dot_color_white">Белые</string>
     <string name="dot_color_black">Чёрные</string>
     <string name="dot_color_monet">Monet</string>
-    <string name="dot_size_title">Размер точек</string>
-    <string name="dot_opacity_title">Непрозрачность точек</string>
+    <string name="dot_size_title">Размер</string>
+    <string name="dot_count_title">Количество</string>
+    <string name="iphone_mode_title">Как на iPhone</string>
+    <string name="iphone_mode_summary">Точки и движение максимально близко к Vehicle Motion Cues в iOS: белые на тёмной теме, чёрные на светлой. Остальные настройки точек и движения недоступны.</string>
+    <string name="dot_opacity_title">Непрозрачность</string>
 
+    <string name="motion_mode_title">Режим</string>
+    <string name="motion_mode_inertia">Инерция</string>
+    <string name="motion_mode_gyroscope">Гироскоп</string>
+    <string name="motion_mode_inertia_summary">Как в iOS: точки отвечают на разгон, торможение и повороты машины и плавно возвращаются. Вращение телефона в руке не мешает.</string>
+    <string name="motion_mode_gyroscope_summary">Как в большинстве приложений для Android: точки привязаны к миру вокруг и живо отвечают на любой поворот и наклон телефона.</string>
+    <string name="sensitivity_title">Чувствительность</string>
+    <string name="sensitivity_summary">Насколько сильно точки отвечают на движение — в любом режиме</string>
+
+    <string name="section_display">Отображение</string>
+    <string name="above_system_title">Поверх шторки и системных окон</string>
+    <string name="above_system_summary_off">Точки видны поверх приложений, но под шторкой уведомлений и клавиатурой</string>
+    <string name="above_system_summary_on">Точки видны поверх всего, белые и чёрные — без прозрачности</string>
+    <string name="above_system_summary_needs_service">Включите службу «Сигналы движения» в разделе «Специальные возможности»</string>
+    <string name="above_system_dialog_title">Поверх шторки и системных окон</string>
+    <string name="above_system_dialog_message">Поверх шторки уведомлений, клавиатуры и системных окон могут рисовать только службы специальных возможностей — как экранная лупа.
+
+Откройте «Специальные возможности», выберите «Сигналы движения» и включите службу. Она ничего не читает с экрана, а только показывает точки.
+
+Если приложение установлено не из Play Маркета, Android может сначала попросить разрешить ограниченные настройки: Настройки → Приложения → Сигналы движения → ⋮ → «Разрешить ограниченные настройки».</string>
+    <string name="above_system_dialog_open">Открыть настройки</string>
+    <string name="accessibility_description">Показывает точки сигналов движения поверх шторки уведомлений, клавиатуры и системных окон. Служба не читает содержимое экрана и не собирает данные.</string>
+
+    <string name="theme_title">Тема</string>
+    <string name="theme_light">Светлая</string>
+    <string name="theme_dark">Тёмная</string>
+    <string name="theme_monet">Monet</string>
+
+    <string name="haptics_switch">Виброотклик</string>
+    <string name="haptics_summary">Отклик вибромотора на переключатели и ползунки</string>
+
+    <string name="navigate_up">Назад</string>
+
+    <!-- Уведомление -->
     <string name="notification_channel">Сигналы движения</string>
     <string name="notification_title">Сигналы движения включены</string>
     <string name="notification_text">Точки на экране повторяют движение машины</string>

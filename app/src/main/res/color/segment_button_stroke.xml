@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+    Обводка кнопок в группах выбора. У Material неактивная обводка — 12% и на тёмном
+    фоне пропадает; делаем её той же, что у активной, но приглушённой — кнопка видна
+    как «есть, но недоступна».
+-->
+<selector xmlns:android="http://schemas.android.com/apk/res/android">
+    <item android:alpha="0.5" android:color="?attr/colorOutline" android:state_enabled="false" />
+    <item android:color="?attr/colorOutline" />
+</selector>

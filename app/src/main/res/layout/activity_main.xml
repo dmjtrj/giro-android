@@ -6,195 +6,95 @@
     android:layout_height="match_parent"
     android:fillViewport="true">
 
-<LinearLayout
-    android:layout_width="match_parent"
-    android:layout_height="wrap_content"
-    android:gravity="center"
-    android:orientation="vertical"
-    android:paddingVertical="24dp">
-
-    <!-- Временный экран для проверки оверлея; полноценный интерфейс — в отдельной фиче -->
-    <com.google.android.material.materialswitch.MaterialSwitch
-        android:id="@+id/cues_switch"
-        android:hapticFeedbackEnabled="false"
+    <!--
+        Шестерёнка прибита к правому верхнему углу, а блок «заголовок — превью — текст»
+        стоит по вертикали чуть выше центра: распорки делят свободное место 45/55.
+        Если блок не помещается (маленький экран), распорки схлопываются и всё прокручивается.
+    -->
+    <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:layout_marginHorizontal="24dp"
-        android:text="@string/cues_switch"
-        android:textAppearance="?attr/textAppearanceTitleLarge" />
+        android:orientation="vertical"
+        android:paddingHorizontal="16dp"
+        android:paddingBottom="24dp">
 
-    <TextView
-        android:id="@+id/cues_summary"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:layout_marginHorizontal="24dp"
-        android:layout_marginTop="8dp"
-        android:text="@string/cues_summary"
-        android:textAppearance="?attr/textAppearanceBodyMedium"
-        android:textColor="?attr/colorOnSurfaceVariant" />
+        <ImageButton
+            android:id="@+id/settings_button"
+            android:layout_width="48dp"
+            android:layout_height="48dp"
+            android:layout_gravity="end"
+            android:layout_marginTop="8dp"
+            android:background="?attr/actionBarItemBackground"
+            android:contentDescription="@string/settings_title"
+            android:src="@drawable/ic_settings" />
 
-    <com.google.android.material.materialswitch.MaterialSwitch
-        android:id="@+id/haptics_switch"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:layout_marginHorizontal="24dp"
-        android:layout_marginTop="32dp"
-        android:hapticFeedbackEnabled="false"
-        android:text="@string/haptics_switch"
-        android:textAppearance="?attr/textAppearanceTitleMedium" />
+        <Space
+            android:layout_width="match_parent"
+            android:layout_height="0dp"
+            android:layout_weight="45" />
 
-    <TextView
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:layout_marginHorizontal="24dp"
-        android:layout_marginTop="40dp"
-        android:text="@string/theme_title"
-        android:textAppearance="?attr/textAppearanceTitleMedium" />
-
-    <com.google.android.material.button.MaterialButtonToggleGroup
-        android:id="@+id/theme_group"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:layout_marginHorizontal="24dp"
-        android:layout_marginTop="12dp"
-        app:selectionRequired="true"
-        app:singleSelection="true">
-
-        <Button
-            android:id="@+id/theme_light"
-            android:hapticFeedbackEnabled="false"
-            style="?attr/materialButtonOutlinedStyle"
-            android:layout_width="0dp"
+        <TextView
+            android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:layout_weight="1"
-            android:text="@string/theme_light" />
+            android:paddingHorizontal="8dp"
+            android:text="@string/app_name"
+            android:textAppearance="?attr/textAppearanceDisplaySmall"
+            android:textColor="?attr/colorOnSurface" />
 
-        <Button
-            android:id="@+id/theme_dark"
-            android:hapticFeedbackEnabled="false"
-            style="?attr/materialButtonOutlinedStyle"
-            android:layout_width="0dp"
+        <!-- Окно превью: точки и круглая кнопка включения по центру -->
+        <com.google.android.material.card.MaterialCardView
+            style="@style/Widget.MotionCues.Card"
+            android:layout_width="match_parent"
+            android:layout_height="320dp"
+            android:layout_marginTop="24dp"
+            app:cardCornerRadius="32dp">
+
+            <com.motioncues.app.overlay.CuePreviewView
+                android:id="@+id/preview"
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
+                android:contentDescription="@string/preview_description" />
+
+            <com.google.android.material.card.MaterialCardView
+                android:id="@+id/power_button"
+                android:layout_width="88dp"
+                android:layout_height="88dp"
+                android:layout_gravity="center"
+                android:clickable="true"
+                android:focusable="true"
+                android:hapticFeedbackEnabled="false"
+                app:cardCornerRadius="44dp"
+                app:cardElevation="0dp"
+                app:strokeWidth="0dp">
+
+                <ImageView
+                    android:id="@+id/power_icon"
+                    android:layout_width="36dp"
+                    android:layout_height="36dp"
+                    android:layout_gravity="center"
+                    android:importantForAccessibility="no"
+                    android:src="@drawable/ic_power" />
+
+            </com.google.android.material.card.MaterialCardView>
+
+        </com.google.android.material.card.MaterialCardView>
+
+        <TextView
+            android:id="@+id/cues_summary"
+            android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:layout_weight="1"
-            android:text="@string/theme_dark" />
+            android:layout_marginTop="20dp"
+            android:lineSpacingMultiplier="1.1"
+            android:paddingHorizontal="8dp"
+            android:text="@string/cues_summary"
+            android:textAppearance="?attr/textAppearanceBodyLarge"
+            android:textColor="?attr/colorOnSurfaceVariant" />
 
-        <Button
-            android:id="@+id/theme_monet"
-            android:hapticFeedbackEnabled="false"
-            style="?attr/materialButtonOutlinedStyle"
-            android:layout_width="0dp"
-            android:layout_height="wrap_content"
-            android:layout_weight="1"
-            android:text="@string/theme_monet" />
+        <Space
+            android:layout_width="match_parent"
+            android:layout_height="0dp"
+            android:layout_weight="55" />
 
-    </com.google.android.material.button.MaterialButtonToggleGroup>
-
-    <TextView
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:layout_marginHorizontal="24dp"
-        android:layout_marginTop="32dp"
-        android:text="@string/dot_color_title"
-        android:textAppearance="?attr/textAppearanceTitleMedium" />
-
-    <!-- Четыре кнопки в ряд: узкие отступы, чтобы подписи не обрезались -->
-    <com.google.android.material.button.MaterialButtonToggleGroup
-        android:id="@+id/dot_color_group"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:layout_marginHorizontal="24dp"
-        android:layout_marginTop="12dp"
-        app:selectionRequired="true"
-        app:singleSelection="true">
-
-        <Button
-            android:id="@+id/dot_color_auto"
-            android:hapticFeedbackEnabled="false"
-            style="?attr/materialButtonOutlinedStyle"
-            android:paddingHorizontal="4dp"
-            android:maxLines="1"
-            android:layout_width="0dp"
-            android:layout_height="wrap_content"
-            android:layout_weight="1"
-            android:text="@string/dot_color_auto" />
-
-        <Button
-            android:id="@+id/dot_color_white"
-            android:hapticFeedbackEnabled="false"
-            style="?attr/materialButtonOutlinedStyle"
-            android:paddingHorizontal="4dp"
-            android:maxLines="1"
-            android:layout_width="0dp"
-            android:layout_height="wrap_content"
-            android:layout_weight="1"
-            android:text="@string/dot_color_white" />
-
-        <Button
-            android:id="@+id/dot_color_black"
-            android:hapticFeedbackEnabled="false"
-            style="?attr/materialButtonOutlinedStyle"
-            android:paddingHorizontal="4dp"
-            android:maxLines="1"
-            android:layout_width="0dp"
-            android:layout_height="wrap_content"
-            android:layout_weight="1"
-            android:text="@string/dot_color_black" />
-
-        <Button
-            android:id="@+id/dot_color_monet"
-            android:hapticFeedbackEnabled="false"
-            style="?attr/materialButtonOutlinedStyle"
-            android:paddingHorizontal="4dp"
-            android:maxLines="1"
-            android:layout_width="0dp"
-            android:layout_height="wrap_content"
-            android:layout_weight="1"
-            android:text="@string/dot_color_monet" />
-
-    </com.google.android.material.button.MaterialButtonToggleGroup>
-
-    <TextView
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:layout_marginHorizontal="24dp"
-        android:layout_marginTop="32dp"
-        android:text="@string/dot_size_title"
-        android:textAppearance="?attr/textAppearanceTitleMedium" />
-
-    <com.google.android.material.slider.Slider
-        android:id="@+id/dot_size_slider"
-        android:hapticFeedbackEnabled="false"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:layout_marginHorizontal="12dp"
-        android:contentDescription="@string/dot_size_title"
-        android:stepSize="1"
-        android:valueFrom="1"
-        android:valueTo="5"
-        app:labelBehavior="gone"
-        app:tickVisible="true" />
-
-    <TextView
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:layout_marginHorizontal="24dp"
-        android:layout_marginTop="16dp"
-        android:text="@string/dot_opacity_title"
-        android:textAppearance="?attr/textAppearanceTitleMedium" />
-
-    <com.google.android.material.slider.Slider
-        android:id="@+id/dot_opacity_slider"
-        android:hapticFeedbackEnabled="false"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:layout_marginHorizontal="12dp"
-        android:contentDescription="@string/dot_opacity_title"
-        android:stepSize="1"
-        android:valueFrom="1"
-        android:valueTo="5"
-        app:labelBehavior="gone"
-        app:tickVisible="true" />
-
-</LinearLayout>
+    </LinearLayout>
 
 </ScrollView>

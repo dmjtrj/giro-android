@@ -9,6 +9,8 @@ import android.os.Handler;
 import android.os.HandlerThread;
 import android.os.Process;
 
+import com.motioncues.app.settings.MotionMode;
+
 /**
  * Связывает датчики Android с движком: показания читаются в отдельном потоке,
  * а точки шагаются в потоке отрисовки через {@link #step(long, CueState)}.
@@ -24,7 +26,10 @@ public final class MotionEngine {
     private final Sensor accelerationSensor;
     private final Sensor rotationSensor;
     private final AccelerationEstimator estimator = new AccelerationEstimator();
+    private final RotationEstimator rotationEstimator = new RotationEstimator();
     private final CueSpring spring = new CueSpring();
+    /** Выбранный режим; оба оценщика получают данные всегда — переключение без скачка. */
+    private volatile MotionMode mode = MotionMode.INERTIA;
 
     private HandlerThread sensorThread;
     private long lastFrameNanos;
@@ -37,6 +42,7 @@ public final class MotionEngine {
                 estimator.onAcceleration(event.values[0], event.values[1], event.values[2], event.timestamp);
             } else {
                 estimator.onRotationVector(event.values, event.timestamp);
+                rotationEstimator.onRotationVector(event.values, event.timestamp);
             }
         }
 
@@ -66,6 +72,7 @@ public final class MotionEngine {
             return;
         }
         estimator.reset();
+        rotationEstimator.reset();
         spring.reset();
         lastFrameNanos = 0L;
 
@@ -88,10 +95,17 @@ public final class MotionEngine {
     /** Поворот дисплея ({@code Surface.ROTATION_*}) — вызывать при смене ориентации. */
     public void setDisplayRotation(int rotation) {
         estimator.setDisplayRotation(rotation);
+        rotationEstimator.setDisplayRotation(rotation);
     }
 
     public void setSensitivity(float sensitivity) {
         estimator.setSensitivity(sensitivity);
+        rotationEstimator.setSensitivity(sensitivity);
+    }
+
+    /** «Инерция» (как в iOS) или «Гироскоп» (как в большинстве приложений для Android). */
+    public void setMode(MotionMode mode) {
+        this.mode = mode;
     }
 
     /**
@@ -102,7 +116,11 @@ public final class MotionEngine {
     public void step(long frameTimeNanos, CueState out) {
         float dt = lastFrameNanos == 0L ? 0f : (frameTimeNanos - lastFrameNanos) * 1e-9f;
         lastFrameNanos = frameTimeNanos;
-        spring.step(dt, estimator.targetX(), estimator.targetY(), out);
+        if (mode == MotionMode.GYROSCOPE) {
+            spring.step(dt, rotationEstimator.targetX(), rotationEstimator.targetY(), out);
+        } else {
+            spring.step(dt, estimator.targetX(), estimator.targetY(), out);
+        }
     }
 
     private Sensor firstAvailable(int... types) {

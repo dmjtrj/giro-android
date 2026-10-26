@@ -1,42 +1,46 @@
 package com.motioncues.app;
 
 import android.Manifest;
+import android.animation.ArgbEvaluator;
+import android.animation.ValueAnimator;
 import android.content.Intent;
 import android.content.pm.PackageManager;
+import android.content.res.ColorStateList;
 import android.net.Uri;
 import android.os.Build;
 import android.os.Bundle;
 import android.provider.Settings;
-import android.view.View;
+import android.widget.ImageView;
 import android.widget.TextView;
 
-import androidx.activity.EdgeToEdge;
 import androidx.activity.result.ActivityResultLauncher;
 import androidx.activity.result.contract.ActivityResultContracts;
-import androidx.appcompat.app.AppCompatActivity;
-import androidx.core.graphics.Insets;
-import androidx.core.view.ViewCompat;
-import androidx.core.view.WindowCompat;
-import androidx.core.view.WindowInsetsCompat;
-import androidx.core.view.WindowInsetsControllerCompat;
 
-import com.google.android.material.button.MaterialButtonToggleGroup;
-import com.google.android.material.materialswitch.MaterialSwitch;
-import com.google.android.material.slider.Slider;
+import com.google.android.material.card.MaterialCardView;
+import com.google.android.material.color.MaterialColors;
+import com.google.android.material.dialog.MaterialAlertDialogBuilder;
 import com.motioncues.app.haptics.HapticEffect;
 import com.motioncues.app.haptics.Haptics;
 import com.motioncues.app.motion.MotionEngine;
 import com.motioncues.app.overlay.CueOverlayService;
-import com.motioncues.app.settings.AppSettings;
-import com.motioncues.app.settings.DotColor;
-import com.motioncues.app.settings.ThemeController;
-import com.motioncues.app.settings.ThemeMode;
+import com.motioncues.app.overlay.CuePreviewView;
+import com.motioncues.app.ui.ThemedActivity;
 
-public final class MainActivity extends AppCompatActivity implements CueOverlayService.StateListener {
+/**
+ * Главный экран: окно превью с круглой кнопкой включения по центру и шестерёнка настроек.
+ * Включено — кнопка залита акцентным цветом и в превью видны точки; выключено — кнопка
+ * приглушена, точки плавно гаснут.
+ */
+public final class MainActivity extends ThemedActivity implements CueOverlayService.StateListener {
 
-    private MaterialSwitch cuesSwitch;
+    private static final long BUTTON_ANIMATION_MS = 220;
+
+    private MaterialCardView powerButton;
+    private ImageView powerIcon;
+    private CuePreviewView preview;
     private Haptics haptics;
-    private TextView summary;
+    private ValueAnimator buttonAnimator;
+    private Boolean shownOn;
     /** Пользователь включил эффект и ушёл выдавать разрешение — включим по возвращении. */
     private boolean pendingStart;
 
@@ -45,47 +49,30 @@ public final class MainActivity extends AppCompatActivity implements CueOverlayS
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
-        EdgeToEdge.enable(this);
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
 
-        View root = findViewById(R.id.root);
-        ViewCompat.setOnApplyWindowInsetsListener(root, (v, windowInsets) -> {
-            Insets bars = windowInsets.getInsets(WindowInsetsCompat.Type.systemBars()
-                    | WindowInsetsCompat.Type.displayCutout());
-            v.setPadding(bars.left, bars.top, bars.right, bars.bottom);
-            return WindowInsetsCompat.CONSUMED;
-        });
-
-        // Иконки строки состояния — под тему приложения, а не системы
-        boolean night = ThemeController.isNight(this, new AppSettings(this).theme());
-        WindowInsetsControllerCompat insetsController = WindowCompat.getInsetsController(getWindow(), root);
-        insetsController.setAppearanceLightStatusBars(!night);
-        insetsController.setAppearanceLightNavigationBars(!night);
-
         haptics = Haptics.get(this);
-        setupHapticsSwitch();
-        setupThemePicker();
-        setupDotColorPicker();
-        setupDotSliders();
+        powerButton = findViewById(R.id.power_button);
+        powerIcon = findViewById(R.id.power_icon);
+        preview = findViewById(R.id.preview);
 
-        cuesSwitch = findViewById(R.id.cues_switch);
-        summary = findViewById(R.id.cues_summary);
+        findViewById(R.id.settings_button).setOnClickListener(
+                v -> startActivity(new Intent(this, SettingsActivity.class)));
 
         if (!new MotionEngine(this).isSupported()) {
-            cuesSwitch.setEnabled(false);
-            summary.setText(R.string.sensors_unsupported);
+            powerButton.setEnabled(false);
+            ((TextView) findViewById(R.id.cues_summary)).setText(R.string.sensors_unsupported);
+            showState(false);
             return;
         }
-        cuesSwitch.setOnCheckedChangeListener((button, checked) -> {
-            if (!button.isPressed()) {
-                return;
-            }
-            if (checked) {
-                requestStart();
-            } else {
+        powerButton.setOnClickListener(v -> {
+            if (CueOverlayService.isRunning()) {
                 haptics.play(HapticEffect.CUES_OFF);
                 CueOverlayService.stop(this);
+                showState(false);
+            } else {
+                requestStart();
             }
         });
     }
@@ -98,7 +85,7 @@ public final class MainActivity extends AppCompatActivity implements CueOverlayS
             requestStart();
         } else {
             pendingStart = false;
-            syncState();
+            showState(CueOverlayService.isRunning());
         }
     }
 
@@ -110,118 +97,12 @@ public final class MainActivity extends AppCompatActivity implements CueOverlayS
 
     @Override
     public void onCuesStateChanged(boolean running) {
-        syncState();
-    }
-
-    private void setupThemePicker() {
-        MaterialButtonToggleGroup group = findViewById(R.id.theme_group);
-        switch (new AppSettings(this).theme()) {
-            case LIGHT:
-                group.check(R.id.theme_light);
-                break;
-            case DARK:
-                group.check(R.id.theme_dark);
-                break;
-            default:
-                group.check(R.id.theme_monet);
-                break;
-        }
-        group.addOnButtonCheckedListener((g, checkedId, isChecked) -> {
-            if (!isChecked) {
-                return;
-            }
-            ThemeMode mode = checkedId == R.id.theme_light ? ThemeMode.LIGHT
-                    : checkedId == R.id.theme_dark ? ThemeMode.DARK
-                    : ThemeMode.MONET;
-            haptics.play(HapticEffect.SELECT);
-            ThemeController.change(this, mode);
-        });
-    }
-
-    private void setupDotColorPicker() {
-        AppSettings settings = new AppSettings(this);
-        MaterialButtonToggleGroup group = findViewById(R.id.dot_color_group);
-        switch (settings.dotColor()) {
-            case WHITE:
-                group.check(R.id.dot_color_white);
-                break;
-            case BLACK:
-                group.check(R.id.dot_color_black);
-                break;
-            case MONET:
-                group.check(R.id.dot_color_monet);
-                break;
-            default:
-                group.check(R.id.dot_color_auto);
-                break;
-        }
-        group.addOnButtonCheckedListener((g, checkedId, isChecked) -> {
-            if (!isChecked) {
-                return;
-            }
-            DotColor color = checkedId == R.id.dot_color_white ? DotColor.WHITE
-                    : checkedId == R.id.dot_color_black ? DotColor.BLACK
-                    : checkedId == R.id.dot_color_monet ? DotColor.MONET
-                    : DotColor.AUTO;
-            haptics.play(HapticEffect.SELECT);
-            settings.setDotColor(color);
-        });
-    }
-
-    /** Ползунки сохраняют значение на каждом шаге — точки меняются прямо во время перетаскивания. */
-    private void setupDotSliders() {
-        AppSettings settings = new AppSettings(this);
-        Slider size = findViewById(R.id.dot_size_slider);
-        Slider opacity = findViewById(R.id.dot_opacity_slider);
-        size.setValue(settings.dotSize());
-        opacity.setValue(settings.dotOpacity());
-        size.addOnChangeListener((slider, value, fromUser) -> {
-            if (fromUser) {
-                playSliderStep(value);
-                settings.setDotSize(Math.round(value));
-            }
-        });
-        opacity.addOnChangeListener((slider, value, fromUser) -> {
-            if (fromUser) {
-                playSliderStep(value);
-                settings.setDotOpacity(Math.round(value));
-            }
-        });
-    }
-
-    /** Каждое деление — «зубчик», крайние — более плотный упор. */
-    private void playSliderStep(float value) {
-        int level = Math.round(value);
-        boolean edge = level == AppSettings.MIN_LEVEL || level == AppSettings.MAX_LEVEL;
-        haptics.play(edge ? HapticEffect.SLIDER_EDGE : HapticEffect.SLIDER_TICK);
-    }
-
-    private void setupHapticsSwitch() {
-        AppSettings settings = new AppSettings(this);
-        MaterialSwitch hapticsSwitch = findViewById(R.id.haptics_switch);
-        hapticsSwitch.setChecked(settings.hapticsEnabled());
-        hapticsSwitch.setOnCheckedChangeListener((button, checked) -> {
-            if (!button.isPressed()) {
-                return;
-            }
-            if (checked) {
-                settings.setHapticsEnabled(true);
-                haptics.play(HapticEffect.TOGGLE_ON);
-            } else {
-                // Последний отклик до выключения — подтверждает, что вибрация отключена
-                haptics.play(HapticEffect.TOGGLE_OFF);
-                settings.setHapticsEnabled(false);
-            }
-        });
+        showState(running);
     }
 
     private void requestStart() {
         if (!CueOverlayService.canShowOverlay(this)) {
-            pendingStart = true;
-            cuesSwitch.setChecked(false);
-            summary.setText(R.string.overlay_permission_needed);
-            startActivity(new Intent(Settings.ACTION_MANAGE_OVERLAY_PERMISSION,
-                    Uri.parse("package:" + getPackageName())));
+            showOverlayPermissionDialog();
             return;
         }
         pendingStart = false;
@@ -235,15 +116,66 @@ public final class MainActivity extends AppCompatActivity implements CueOverlayS
         }
     }
 
+    /**
+     * С Android 11 система открывает общий список приложений, а не страницу нашего —
+     * поэтому заранее объясняем, что именно там искать.
+     */
+    private void showOverlayPermissionDialog() {
+        new MaterialAlertDialogBuilder(this)
+                .setTitle(R.string.overlay_dialog_title)
+                .setMessage(R.string.overlay_dialog_message)
+                .setPositiveButton(R.string.overlay_dialog_open, (dialog, which) -> {
+                    pendingStart = true;
+                    startActivity(new Intent(Settings.ACTION_MANAGE_OVERLAY_PERMISSION,
+                            Uri.parse("package:" + getPackageName())));
+                })
+                .setNegativeButton(R.string.overlay_dialog_later, null)
+                .show();
+    }
+
     private void startCues() {
         haptics.play(HapticEffect.CUES_ON);
         CueOverlayService.start(this);
-        cuesSwitch.setChecked(true);
-        summary.setText(R.string.cues_summary);
+        showState(true);
     }
 
-    private void syncState() {
-        cuesSwitch.setChecked(CueOverlayService.isRunning());
-        summary.setText(R.string.cues_summary);
+    /**
+     * Включено: кнопка залита акцентным цветом, точки в превью видны. Выключено: кнопка
+     * приглушена, точки плавно гаснут. Цвета перетекают, а не переключаются скачком.
+     */
+    private void showState(boolean on) {
+        powerButton.setContentDescription(getString(on ? R.string.power_turn_off : R.string.power_turn_on));
+        int bg = MaterialColors.getColor(powerButton, on
+                ? androidx.appcompat.R.attr.colorPrimary
+                : com.google.android.material.R.attr.colorSurfaceContainerHighest);
+        int fg = MaterialColors.getColor(powerButton, on
+                ? com.google.android.material.R.attr.colorOnPrimary
+                : com.google.android.material.R.attr.colorOutline);
+        boolean animate = shownOn != null && shownOn != on;
+        preview.setDotsShown(on, animate);
+        if (animate) {
+            animateButton(bg, fg);
+        } else if (shownOn == null) {
+            powerButton.setCardBackgroundColor(bg);
+            powerIcon.setImageTintList(ColorStateList.valueOf(fg));
+        }
+        shownOn = on;
+    }
+
+    private void animateButton(int bg, int fg) {
+        if (buttonAnimator != null) {
+            buttonAnimator.cancel();
+        }
+        int fromBg = powerButton.getCardBackgroundColor().getDefaultColor();
+        ColorStateList tint = powerIcon.getImageTintList();
+        int fromFg = tint != null ? tint.getDefaultColor() : fg;
+        ArgbEvaluator evaluator = new ArgbEvaluator();
+        buttonAnimator = ValueAnimator.ofFloat(0f, 1f).setDuration(BUTTON_ANIMATION_MS);
+        buttonAnimator.addUpdateListener(a -> {
+            float f = a.getAnimatedFraction();
+            powerButton.setCardBackgroundColor((int) evaluator.evaluate(f, fromBg, bg));
+            powerIcon.setImageTintList(ColorStateList.valueOf((int) evaluator.evaluate(f, fromFg, fg)));
+        });
+        buttonAnimator.start();
     }
 }

@@ -33,6 +33,16 @@ public final class DotStyle {
         return OPACITY[index(level)];
     }
 
+    /**
+     * Белые и чёрные точки всегда полностью непрозрачные — чистый цвет без просвечивания
+     * фона, как на iPhone. Ползунок непрозрачности на них не действует.
+     * В обычном оверлее система всё равно ограничит окно до 80%; полные 100% —
+     * в режиме «Поверх шторки» (окно службы специальных возможностей).
+     */
+    public static float solidOpacity() {
+        return 1f;
+    }
+
     private static int index(int level) {
         int clamped = Math.max(AppSettings.MIN_LEVEL, Math.min(AppSettings.MAX_LEVEL, level));
         return clamped - AppSettings.MIN_LEVEL;
