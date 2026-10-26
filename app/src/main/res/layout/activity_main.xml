@@ -6,18 +6,22 @@
     android:gravity="center"
     android:orientation="vertical">
 
-    <TextView
-        android:layout_width="wrap_content"
+    <!-- Временный экран для проверки оверлея; полноценный интерфейс — в отдельной фиче -->
+    <com.google.android.material.materialswitch.MaterialSwitch
+        android:id="@+id/cues_switch"
+        android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:text="@string/app_name"
-        android:textAppearance="?attr/textAppearanceHeadlineMedium"
-        android:textColor="?attr/colorOnSurface" />
+        android:layout_marginHorizontal="24dp"
+        android:text="@string/cues_switch"
+        android:textAppearance="?attr/textAppearanceTitleLarge" />
 
     <TextView
-        android:layout_width="wrap_content"
+        android:id="@+id/cues_summary"
+        android:layout_width="match_parent"
         android:layout_height="wrap_content"
+        android:layout_marginHorizontal="24dp"
         android:layout_marginTop="8dp"
-        android:text="@string/skeleton_subtitle"
+        android:text="@string/cues_summary"
         android:textAppearance="?attr/textAppearanceBodyMedium"
         android:textColor="?attr/colorOnSurfaceVariant" />
 
