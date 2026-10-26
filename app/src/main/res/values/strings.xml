@@ -7,6 +7,8 @@
     <string name="overlay_permission_needed">Разрешите показ поверх других приложений, чтобы точки были видны везде</string>
     <string name="sensors_unsupported">На этом устройстве нет нужных датчиков движения</string>
 
+    <string name="haptics_switch">Виброотклик</string>
+
     <string name="theme_title">Оформление</string>
     <string name="theme_light">Светлая</string>
     <string name="theme_dark">Тёмная</string>
