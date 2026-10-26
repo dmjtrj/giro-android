@@ -1,18 +1,20 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <string name="app_name">Сигналы движения</string>
+    <string name="app_name">Гиро</string>
+    <!-- Подпись над названием на главном экране — как заголовок раздела в меню Gran Turismo -->
+    <string name="app_overline" translatable="false">VEHICLE MOTION CUES</string>
 
     <!-- Главный экран -->
     <string name="power_turn_on">Включить сигналы движения</string>
     <string name="power_turn_off">Выключить сигналы движения</string>
-    <string name="cues_summary">Точки по краям экрана повторяют разгон, торможение и повороты машины. Глаза видят движение, которое чувствует тело, — и укачивает меньше.</string>
+    <string name="cues_summary">Точки по краям экрана повторяют движение в пути. Взгляд и тело снова заодно — укачивание отступает.</string>
     <string name="sensors_unsupported">На этом устройстве нет нужных датчиков движения</string>
     <string name="preview_description">Превью точек</string>
     <string name="settings_title">Настройки</string>
 
     <!-- Онбординг разрешения -->
     <string name="overlay_dialog_title">Показ поверх приложений</string>
-    <string name="overlay_dialog_message">Точки рисуются поверх других приложений — для этого нужно разрешение.\n\nВ открывшемся списке найдите «Сигналы движения» и включите «Разрешить показ поверх других приложений». Затем вернитесь сюда — эффект включится сам.</string>
+    <string name="overlay_dialog_message">Точки рисуются поверх других приложений — для этого нужно разрешение.\n\nВ открывшемся списке найдите «Гиро» и включите «Разрешить показ поверх других приложений». Затем вернитесь сюда — эффект включится сам.</string>
     <string name="overlay_dialog_open">Открыть настройки</string>
     <string name="overlay_dialog_later">Не сейчас</string>
 
@@ -45,15 +47,15 @@
     <string name="above_system_title">Поверх шторки и системных окон</string>
     <string name="above_system_summary_off">Точки видны поверх приложений, но под шторкой уведомлений и клавиатурой</string>
     <string name="above_system_summary_on">Точки видны поверх всего, белые и чёрные — без прозрачности</string>
-    <string name="above_system_summary_needs_service">Включите службу «Сигналы движения» в разделе «Специальные возможности»</string>
+    <string name="above_system_summary_needs_service">Включите службу «Гиро» в разделе «Специальные возможности»</string>
     <string name="above_system_dialog_title">Поверх шторки и системных окон</string>
     <string name="above_system_dialog_message">Поверх шторки уведомлений, клавиатуры и системных окон могут рисовать только службы специальных возможностей — как экранная лупа.
 
-Откройте «Специальные возможности», выберите «Сигналы движения» и включите службу. Она ничего не читает с экрана, а только показывает точки.
+Откройте «Специальные возможности», выберите «Гиро» и включите службу. Она ничего не читает с экрана, а только показывает точки.
 
-Если приложение установлено не из Play Маркета, Android может сначала попросить разрешить ограниченные настройки: Настройки → Приложения → Сигналы движения → ⋮ → «Разрешить ограниченные настройки».</string>
+Если приложение установлено не из Play Маркета, Android может сначала попросить разрешить ограниченные настройки: Настройки → Приложения → Гиро → ⋮ → «Разрешить ограниченные настройки».</string>
     <string name="above_system_dialog_open">Открыть настройки</string>
-    <string name="accessibility_description">Показывает точки сигналов движения поверх шторки уведомлений, клавиатуры и системных окон. Служба не читает содержимое экрана и не собирает данные.</string>
+    <string name="accessibility_description">Гиро показывает точки сигналов движения поверх шторки уведомлений, клавиатуры и системных окон. Служба не читает содержимое экрана и не собирает данные.</string>
 
     <string name="theme_title">Тема</string>
     <string name="theme_light">Светлая</string>
@@ -70,8 +72,8 @@
     <string name="tile_off">Выкл.</string>
 
     <!-- Уведомление -->
-    <string name="notification_channel">Сигналы движения</string>
-    <string name="notification_title">Сигналы движения включены</string>
-    <string name="notification_text">Точки на экране повторяют движение машины</string>
+    <string name="notification_channel">Гиро</string>
+    <string name="notification_title">Гиро работает</string>
+    <string name="notification_text">Точки повторяют движение в пути</string>
     <string name="action_turn_off">Выключить</string>
 </resources>

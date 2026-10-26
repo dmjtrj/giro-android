@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <color name="ic_launcher_background">#FF3C3C43</color>
+    <color name="ic_launcher_background">#FF0F0F11</color>
 
     <!-- Статичная светлая палитра: монохромная, в духе iOS -->
     <color name="mc_primary">#FF1C1C1E</color>
