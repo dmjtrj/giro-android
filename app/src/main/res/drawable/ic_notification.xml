@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
-<!-- Значок уведомления: те же точки, что на иконке приложения -->
+<!-- Значок для шторки, уведомления и плитки: уровень в кольце, как на иконке -->
 <vector xmlns:android="http://schemas.android.com/apk/res/android"
     android:width="24dp"
     android:height="24dp"
@@ -7,6 +7,36 @@
     android:viewportWidth="24"
     android:viewportHeight="24">
     <path
+        android:fillColor="#00000000"
+        android:pathData="M12,12 m-10.5,0 a10.5,10.5 0 1,0 21,0 a10.5,10.5 0 1,0 -21,0"
+        android:strokeWidth="1.2"
+        android:strokeColor="#80FFFFFF" />
+    <group
+        android:pivotX="12"
+        android:pivotY="12"
+        android:rotation="-11">
+        <path
+            android:fillColor="#00000000"
+            android:pathData="M6,9.25 H18 A2.75,2.75 0 0 1 18,14.75 H6 A2.75,2.75 0 0 1 6,9.25 Z"
+            android:strokeWidth="1"
+            android:strokeColor="#59FFFFFF" />
+    </group>
+    <group
+        android:pivotX="12"
+        android:pivotY="12"
+        android:rotation="11">
+        <path
+            android:fillColor="#00000000"
+            android:pathData="M6,9.25 H18 A2.75,2.75 0 0 1 18,14.75 H6 A2.75,2.75 0 0 1 6,9.25 Z"
+            android:strokeWidth="1"
+            android:strokeColor="#59FFFFFF" />
+    </group>
+    <path
+        android:fillColor="#00000000"
+        android:pathData="M6,9.25 H18 A2.75,2.75 0 0 1 18,14.75 H6 A2.75,2.75 0 0 1 6,9.25 Z"
+        android:strokeWidth="1.4"
+        android:strokeColor="@android:color/white" />
+    <path
         android:fillColor="@android:color/white"
-        android:pathData="M12,9.5a2.5,2.5 0,1 1,0 5a2.5,2.5 0,1 1,0 -5z M12,3a1.75,1.75 0,1 1,0 3.5a1.75,1.75 0,1 1,0 -3.5z M12,17.5a1.75,1.75 0,1 1,0 3.5a1.75,1.75 0,1 1,0 -3.5z M4.75,10.25a1.75,1.75 0,1 1,0 3.5a1.75,1.75 0,1 1,0 -3.5z M19.25,10.25a1.75,1.75 0,1 1,0 3.5a1.75,1.75 0,1 1,0 -3.5z" />
+        android:pathData="M12,12 m-1.6,0 a1.6,1.6 0 1,0 3.2,0 a1.6,1.6 0 1,0 -3.2,0" />
 </vector>

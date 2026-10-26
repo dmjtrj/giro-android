@@ -33,12 +33,26 @@
             android:layout_height="0dp"
             android:layout_weight="45" />
 
+        <!-- В стиле меню Gran Turismo: мелкая подпись с разрядкой и тонкое крупное название -->
         <TextView
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
+            android:letterSpacing="0.3"
+            android:paddingHorizontal="8dp"
+            android:text="@string/app_overline"
+            android:textAppearance="?attr/textAppearanceLabelMedium"
+            android:textColor="?attr/colorOnSurfaceVariant" />
+
+        <TextView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="4dp"
+            android:fontFamily="sans-serif-light"
+            android:letterSpacing="0.18"
             android:paddingHorizontal="8dp"
             android:text="@string/app_name"
-            android:textAppearance="?attr/textAppearanceDisplaySmall"
+            android:textAllCaps="true"
+            android:textAppearance="?attr/textAppearanceDisplayMedium"
             android:textColor="?attr/colorOnSurface" />
 
         <!-- Окно превью: точки и круглая кнопка включения по центру -->
