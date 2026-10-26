@@ -1,0 +1,22 @@
+# Локальный тулчейн (JDK, Android SDK, Gradle-кэш)
+.toolchain/
+
+# Gradle / Android
+.gradle/
+build/
+/local.properties
+/captures
+*.apk
+*.aab
+*.keystore
+*.jks
+
+# IDE
+.idea/
+*.iml
+
+# macOS
+.DS_Store
+
+# Claude Code
+.claude/
