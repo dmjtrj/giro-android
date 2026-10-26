@@ -65,6 +65,10 @@
 
     <string name="navigate_up">Назад</string>
 
+    <!-- Плитка в быстрых настройках -->
+    <string name="tile_on">Вкл.</string>
+    <string name="tile_off">Выкл.</string>
+
     <!-- Уведомление -->
     <string name="notification_channel">Сигналы движения</string>
     <string name="notification_title">Сигналы движения включены</string>

@@ -30,6 +30,7 @@ import com.motioncues.app.haptics.HapticEffect;
 import com.motioncues.app.haptics.Haptics;
 import com.motioncues.app.motion.MotionEngine;
 import com.motioncues.app.settings.AppSettings;
+import com.motioncues.app.tile.CueTileService;
 
 import java.util.concurrent.CopyOnWriteArraySet;
 
@@ -236,6 +237,8 @@ public final class CueOverlayService extends Service {
                 PixelFormat.TRANSLUCENT);
         params.layoutInDisplayCutoutMode = WindowManager.LayoutParams.LAYOUT_IN_DISPLAY_CUTOUT_MODE_ALWAYS;
         params.setFitInsetsTypes(0);
+        // Без системной анимации появления окна — точки видны сразу, проявляет их сам View
+        params.windowAnimations = 0;
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.UPSIDE_DOWN_CAKE) {
             params.setCanPlayMoveAnimation(false);
         }
@@ -296,11 +299,13 @@ public final class CueOverlayService extends Service {
                 .build();
     }
 
-    private static void setRunning(boolean value) {
+    private void setRunning(boolean value) {
         if (running == value) {
             return;
         }
         running = value;
+        // Плитка в шторке показывает актуальное состояние, даже если её сейчас не видно
+        CueTileService.refresh(this);
         for (StateListener listener : listeners) {
             listener.onCuesStateChanged(value);
         }

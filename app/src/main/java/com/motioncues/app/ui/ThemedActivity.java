@@ -1,8 +1,8 @@
 package com.motioncues.app.ui;
 
+import android.content.ComponentName;
+import android.content.Intent;
 import android.os.Bundle;
-import android.os.Handler;
-import android.os.Looper;
 import android.view.View;
 
 import androidx.activity.EdgeToEdge;
@@ -23,17 +23,17 @@ import com.motioncues.app.settings.ThemeMode;
  * Общая основа экранов: отрисовка под системными панелями, отступы под них,
  * иконки строки состояния под тему приложения и пересоздание экрана, если тему
  * сменили на другом экране (иначе экран в стеке остался бы со старыми цветами).
- * Пока открыт любой экран приложения, точки эффекта скрыты — их показывает превью.
+ * Пока на экране любой экран приложения, точки эффекта скрыты — их показывает превью.
+ * Как только приложение уходит с экрана (домой, в другое приложение), точки появляются
+ * сразу, в onPause, — без задержек. Переходы внутри приложения (в настройки и обратно,
+ * пересоздание при смене темы) распознаём и точки не трогаем — они не мигают.
  *
  * <p>Корневой View разметки должен иметь id {@code root}.
  */
 public abstract class ThemedActivity extends AppCompatActivity {
 
-    /** Задержка перед показом точек: при переходе между экранами приложения они не мигают. */
-    private static final long SHOW_CUES_DELAY_MS = 300;
-    private static final Handler handler = new Handler(Looper.getMainLooper());
-    private static final Runnable showCues = () -> CueOverlayService.setAppInForeground(false);
-    private static int resumedScreens;
+    /** Этот экран открывает другой экран приложения — уход не наружу. */
+    private boolean openingOwnScreen;
 
     private ThemeMode appliedTheme;
 
@@ -62,10 +62,16 @@ public abstract class ThemedActivity extends AppCompatActivity {
     }
 
     @Override
+    public void startActivity(Intent intent, Bundle options) {
+        ComponentName target = intent.getComponent();
+        openingOwnScreen = target != null && getPackageName().equals(target.getPackageName());
+        super.startActivity(intent, options);
+    }
+
+    @Override
     protected void onResume() {
         super.onResume();
-        resumedScreens++;
-        handler.removeCallbacks(showCues);
+        openingOwnScreen = false;
         CueOverlayService.setAppInForeground(true);
         if (new AppSettings(this).theme() != appliedTheme) {
             recreate();
@@ -74,9 +80,12 @@ public abstract class ThemedActivity extends AppCompatActivity {
 
     @Override
     protected void onPause() {
-        resumedScreens--;
-        if (resumedScreens == 0) {
-            handler.postDelayed(showCues, SHOW_CUES_DELAY_MS);
+        // Внутри приложения: открываем свой экран, возвращаемся назад к своему,
+        // пересоздаёмся при смене темы. Иначе приложение уходит с экрана — точки сразу
+        boolean stayingInApp = openingOwnScreen || isChangingConfigurations()
+                || (isFinishing() && !isTaskRoot());
+        if (!stayingInApp) {
+            CueOverlayService.setAppInForeground(false);
         }
         super.onPause();
     }
