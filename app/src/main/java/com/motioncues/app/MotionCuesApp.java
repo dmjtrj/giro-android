@@ -2,14 +2,14 @@ package com.motioncues.app;
 
 import android.app.Application;
 
-import com.google.android.material.color.DynamicColors;
+import com.motioncues.app.settings.ThemeController;
 
 public final class MotionCuesApp extends Application {
 
     @Override
     public void onCreate() {
         super.onCreate();
-        // Monet: подтягиваем палитру из обоев во все Activity
-        DynamicColors.applyToActivitiesIfAvailable(this);
+        // Светлая/тёмная/Monet — по настройке пользователя
+        ThemeController.install(this);
     }
 }
