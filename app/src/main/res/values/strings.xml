@@ -1,5 +1,14 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
     <string name="app_name">Сигналы движения</string>
-    <string name="skeleton_subtitle">Каркас приложения</string>
+
+    <string name="cues_switch">Сигналы движения</string>
+    <string name="cues_summary">Точки по краям экрана повторяют движение машины и помогают меньше укачиваться</string>
+    <string name="overlay_permission_needed">Разрешите показ поверх других приложений, чтобы точки были видны везде</string>
+    <string name="sensors_unsupported">На этом устройстве нет нужных датчиков движения</string>
+
+    <string name="notification_channel">Сигналы движения</string>
+    <string name="notification_title">Сигналы движения включены</string>
+    <string name="notification_text">Точки на экране повторяют движение машины</string>
+    <string name="action_turn_off">Выключить</string>
 </resources>
