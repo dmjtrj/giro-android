@@ -1,10 +1,17 @@
 <?xml version="1.0" encoding="utf-8"?>
-<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+<ScrollView xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
     android:id="@+id/root"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
+    android:fillViewport="true">
+
+<LinearLayout
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
     android:gravity="center"
-    android:orientation="vertical">
+    android:orientation="vertical"
+    android:paddingVertical="24dp">
 
     <!-- Временный экран для проверки оверлея; полноценный интерфейс — в отдельной фиче -->
     <com.google.android.material.materialswitch.MaterialSwitch
@@ -25,4 +32,149 @@
         android:textAppearance="?attr/textAppearanceBodyMedium"
         android:textColor="?attr/colorOnSurfaceVariant" />
 
+    <TextView
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginHorizontal="24dp"
+        android:layout_marginTop="40dp"
+        android:text="@string/theme_title"
+        android:textAppearance="?attr/textAppearanceTitleMedium" />
+
+    <com.google.android.material.button.MaterialButtonToggleGroup
+        android:id="@+id/theme_group"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginHorizontal="24dp"
+        android:layout_marginTop="12dp"
+        app:selectionRequired="true"
+        app:singleSelection="true">
+
+        <Button
+            android:id="@+id/theme_light"
+            style="?attr/materialButtonOutlinedStyle"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:text="@string/theme_light" />
+
+        <Button
+            android:id="@+id/theme_dark"
+            style="?attr/materialButtonOutlinedStyle"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:text="@string/theme_dark" />
+
+        <Button
+            android:id="@+id/theme_monet"
+            style="?attr/materialButtonOutlinedStyle"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:text="@string/theme_monet" />
+
+    </com.google.android.material.button.MaterialButtonToggleGroup>
+
+    <TextView
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginHorizontal="24dp"
+        android:layout_marginTop="32dp"
+        android:text="@string/dot_color_title"
+        android:textAppearance="?attr/textAppearanceTitleMedium" />
+
+    <!-- Четыре кнопки в ряд: узкие отступы, чтобы подписи не обрезались -->
+    <com.google.android.material.button.MaterialButtonToggleGroup
+        android:id="@+id/dot_color_group"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginHorizontal="24dp"
+        android:layout_marginTop="12dp"
+        app:selectionRequired="true"
+        app:singleSelection="true">
+
+        <Button
+            android:id="@+id/dot_color_auto"
+            style="?attr/materialButtonOutlinedStyle"
+            android:paddingHorizontal="4dp"
+            android:maxLines="1"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:text="@string/dot_color_auto" />
+
+        <Button
+            android:id="@+id/dot_color_white"
+            style="?attr/materialButtonOutlinedStyle"
+            android:paddingHorizontal="4dp"
+            android:maxLines="1"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:text="@string/dot_color_white" />
+
+        <Button
+            android:id="@+id/dot_color_black"
+            style="?attr/materialButtonOutlinedStyle"
+            android:paddingHorizontal="4dp"
+            android:maxLines="1"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:text="@string/dot_color_black" />
+
+        <Button
+            android:id="@+id/dot_color_monet"
+            style="?attr/materialButtonOutlinedStyle"
+            android:paddingHorizontal="4dp"
+            android:maxLines="1"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:text="@string/dot_color_monet" />
+
+    </com.google.android.material.button.MaterialButtonToggleGroup>
+
+    <TextView
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginHorizontal="24dp"
+        android:layout_marginTop="32dp"
+        android:text="@string/dot_size_title"
+        android:textAppearance="?attr/textAppearanceTitleMedium" />
+
+    <com.google.android.material.slider.Slider
+        android:id="@+id/dot_size_slider"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginHorizontal="12dp"
+        android:contentDescription="@string/dot_size_title"
+        android:stepSize="1"
+        android:valueFrom="1"
+        android:valueTo="5"
+        app:labelBehavior="gone"
+        app:tickVisible="true" />
+
+    <TextView
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginHorizontal="24dp"
+        android:layout_marginTop="16dp"
+        android:text="@string/dot_opacity_title"
+        android:textAppearance="?attr/textAppearanceTitleMedium" />
+
+    <com.google.android.material.slider.Slider
+        android:id="@+id/dot_opacity_slider"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginHorizontal="12dp"
+        android:contentDescription="@string/dot_opacity_title"
+        android:stepSize="1"
+        android:valueFrom="1"
+        android:valueTo="5"
+        app:labelBehavior="gone"
+        app:tickVisible="true" />
+
 </LinearLayout>
+
+</ScrollView>

@@ -7,6 +7,19 @@
     <string name="overlay_permission_needed">Разрешите показ поверх других приложений, чтобы точки были видны везде</string>
     <string name="sensors_unsupported">На этом устройстве нет нужных датчиков движения</string>
 
+    <string name="theme_title">Оформление</string>
+    <string name="theme_light">Светлая</string>
+    <string name="theme_dark">Тёмная</string>
+    <string name="theme_monet">Monet</string>
+
+    <string name="dot_color_title">Цвет точек</string>
+    <string name="dot_color_auto">Авто</string>
+    <string name="dot_color_white">Белые</string>
+    <string name="dot_color_black">Чёрные</string>
+    <string name="dot_color_monet">Monet</string>
+    <string name="dot_size_title">Размер точек</string>
+    <string name="dot_opacity_title">Непрозрачность точек</string>
+
     <string name="notification_channel">Сигналы движения</string>
     <string name="notification_title">Сигналы движения включены</string>
     <string name="notification_text">Точки на экране повторяют движение машины</string>

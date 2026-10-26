@@ -9,6 +9,7 @@ import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
 import android.content.IntentFilter;
+import android.content.SharedPreferences;
 import android.content.pm.ServiceInfo;
 import android.graphics.PixelFormat;
 import android.hardware.display.DisplayManager;
@@ -24,6 +25,7 @@ import androidx.core.content.ContextCompat;
 import com.motioncues.app.MainActivity;
 import com.motioncues.app.R;
 import com.motioncues.app.motion.MotionEngine;
+import com.motioncues.app.settings.AppSettings;
 
 import java.util.concurrent.CopyOnWriteArraySet;
 
@@ -51,7 +53,19 @@ public final class CueOverlayService extends Service {
 
     private WindowManager windowManager;
     private CueOverlayView overlayView;
+    private AppSettings settings;
     private boolean receiverRegistered;
+
+    private final SharedPreferences.OnSharedPreferenceChangeListener settingsListener = (prefs, key) -> {
+        if (overlayView == null) {
+            return;
+        }
+        if (AppSettings.KEY_THEME.equals(key) || AppSettings.KEY_DOT_COLOR.equals(key)) {
+            overlayView.setColors(settings.theme(), settings.dotColor());
+        } else if (AppSettings.KEY_DOT_SIZE.equals(key) || AppSettings.KEY_DOT_OPACITY.equals(key)) {
+            overlayView.setDotStyle(settings.dotSize(), settings.dotOpacity());
+        }
+    };
 
     private final BroadcastReceiver screenReceiver = new BroadcastReceiver() {
         @Override
@@ -160,9 +174,12 @@ public final class CueOverlayService extends Service {
         params.alpha = windowContext.getSystemService(InputManager.class).getMaximumObscuringOpacityForTouch();
         params.setTitle(getString(R.string.app_name));
 
-        overlayView = new CueOverlayView(windowContext, engine, params.alpha);
+        settings = new AppSettings(this);
+        overlayView = new CueOverlayView(windowContext, engine, params.alpha,
+                settings.theme(), settings.dotColor(), settings.dotSize(), settings.dotOpacity());
         windowManager.addView(overlayView, params);
         overlayView.start();
+        settings.registerListener(settingsListener);
 
         IntentFilter filter = new IntentFilter(Intent.ACTION_SCREEN_OFF);
         filter.addAction(Intent.ACTION_SCREEN_ON);
@@ -177,6 +194,7 @@ public final class CueOverlayService extends Service {
             receiverRegistered = false;
         }
         if (overlayView != null) {
+            settings.unregisterListener(settingsListener);
             overlayView.stop();
             windowManager.removeViewImmediate(overlayView);
             overlayView = null;

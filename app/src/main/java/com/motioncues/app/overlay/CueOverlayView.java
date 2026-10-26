@@ -4,7 +4,6 @@ import android.annotation.SuppressLint;
 import android.content.Context;
 import android.content.res.Configuration;
 import android.graphics.Canvas;
-import android.graphics.Color;
 import android.graphics.Paint;
 import android.view.Choreographer;
 import android.view.Display;
@@ -12,6 +11,8 @@ import android.view.View;
 
 import com.motioncues.app.motion.CueState;
 import com.motioncues.app.motion.MotionEngine;
+import com.motioncues.app.settings.DotColor;
+import com.motioncues.app.settings.ThemeMode;
 
 /**
  * Точки-сигналы по левому и правому краю экрана.
@@ -22,30 +23,36 @@ import com.motioncues.app.motion.MotionEngine;
 @SuppressLint("ViewConstructor") // создаётся только из кода, не из XML
 final class CueOverlayView extends View implements Choreographer.FrameCallback {
 
-    /** Видимость точек в покое: заметны, но не мешают. */
-    private static final float IDLE_VISIBILITY = 0.4f;
+    /** Видимость точек в покое относительно выбранной непрозрачности: заметны, но спокойнее. */
+    private static final float IDLE_VISIBILITY = 0.8f;
     /** Порог, ниже которого кадр считается неизменным, px. */
     private static final float REDRAW_EPSILON_PX = 0.05f;
 
-    private static final float DOT_RADIUS_DP = 4.5f;
-    /** Максимальный ход точек; меньше отступа от края, чтобы точки не уходили за экран. */
+    private static final float RING_WIDTH_DP = 1.5f;
+    /** Максимальный ход точек. */
     private static final float MAX_TRAVEL_DP = 18f;
-    private static final float EDGE_MARGIN_DP = 22f;
-    private static final float COLUMN_GAP_DP = 16f;
-    private static final float ROW_SPACING_DP = 96f;
+    /** Отступ от края: ход + самый крупный радиус + обводка — точки не уходят за экран. */
+    private static final float EDGE_MARGIN_DP = MAX_TRAVEL_DP + DotStyle.MAX_RADIUS_DP + RING_WIDTH_DP + 1f;
+    private static final float COLUMN_GAP_DP = 18f;
+    /** Точек во внешней колонке; во внутренней на одну меньше — всего 7 на сторону. */
+    private static final int OUTER_ROWS = 4;
     /** Доля высоты экрана, которую занимают точки, — по центру. */
-    private static final float VERTICAL_SPAN = 0.7f;
+    private static final float VERTICAL_SPAN = 0.6f;
 
     private final MotionEngine engine;
     private final CueState state = new CueState();
-    private final Paint paint = new Paint(Paint.ANTI_ALIAS_FLAG);
+    private final Paint fillPaint = new Paint(Paint.ANTI_ALIAS_FLAG);
+    private final Paint ringPaint = new Paint(Paint.ANTI_ALIAS_FLAG);
     private final float density;
     private final float windowAlpha;
 
     private float[] dotX = new float[0];
     private float[] dotY = new float[0];
-    private int dotColor;
-    private float dotOpacity;
+    private ThemeMode themeMode;
+    private DotColor dotColor;
+    private CuePalette palette;
+    private float radiusDp;
+    private float opacity;
 
     private boolean running;
     private float drawnDx = Float.NaN, drawnDy = Float.NaN;
@@ -55,13 +62,34 @@ final class CueOverlayView extends View implements Choreographer.FrameCallback {
      * @param windowAlpha прозрачность окна-оверлея: учитываем, чтобы итоговая
      *                    яркость точек совпадала с задуманной
      */
-    CueOverlayView(Context context, MotionEngine engine, float windowAlpha) {
+    CueOverlayView(Context context, MotionEngine engine, float windowAlpha,
+                   ThemeMode themeMode, DotColor dotColor, int sizeLevel, int opacityLevel) {
         super(context);
         this.engine = engine;
         this.windowAlpha = windowAlpha;
         density = getResources().getDisplayMetrics().density;
-        paint.setStyle(Paint.Style.FILL);
-        applyPalette(getResources().getConfiguration());
+        fillPaint.setStyle(Paint.Style.FILL);
+        ringPaint.setStyle(Paint.Style.STROKE);
+        ringPaint.setStrokeWidth(RING_WIDTH_DP * density);
+        setDotStyle(sizeLevel, opacityLevel);
+        setColors(themeMode, dotColor);
+    }
+
+    /** Размер и непрозрачность с ползунков — применяются на лету. */
+    void setDotStyle(int sizeLevel, int opacityLevel) {
+        radiusDp = DotStyle.radiusDp(sizeLevel);
+        opacity = DotStyle.opacity(opacityLevel);
+        drawnAlpha = -1;
+        invalidate();
+    }
+
+    /** Смена оформления или цвета на лету — точки перекрашиваются без перезапуска эффекта. */
+    void setColors(ThemeMode mode, DotColor color) {
+        themeMode = mode;
+        dotColor = color;
+        palette = CuePalette.resolve(getContext(), mode, color);
+        drawnAlpha = -1;
+        invalidate();
     }
 
     void start() {
@@ -107,11 +135,18 @@ final class CueOverlayView extends View implements Choreographer.FrameCallback {
         drawnDy = state.offsetY * travel;
         drawnAlpha = currentAlpha();
 
-        paint.setColor(dotColor);
-        paint.setAlpha(drawnAlpha);
-        float radius = DOT_RADIUS_DP * density;
+        fillPaint.setColor(palette.fill);
+        fillPaint.setAlpha(drawnAlpha);
+        ringPaint.setColor(palette.ring);
+        ringPaint.setAlpha(Math.round(drawnAlpha * palette.ringStrength));
+        float radius = radiusDp * density;
+        // Обводка снаружи заливки: заливка остаётся того же размера и цвета
+        float ringRadius = radius + ringPaint.getStrokeWidth() / 2f;
         for (int i = 0; i < dotX.length; i++) {
-            canvas.drawCircle(dotX[i] + drawnDx, dotY[i] + drawnDy, radius, paint);
+            float x = dotX[i] + drawnDx;
+            float y = dotY[i] + drawnDy;
+            canvas.drawCircle(x, y, radius, fillPaint);
+            canvas.drawCircle(x, y, ringRadius, ringPaint);
         }
     }
 
@@ -124,8 +159,8 @@ final class CueOverlayView extends View implements Choreographer.FrameCallback {
     protected void onConfigurationChanged(Configuration newConfig) {
         super.onConfigurationChanged(newConfig);
         updateRotation();
-        applyPalette(newConfig);
-        invalidate();
+        // Сменилась системная тема или обои — для Monet пересчитываем цвета
+        setColors(themeMode, dotColor);
     }
 
     private void updateRotation() {
@@ -135,28 +170,20 @@ final class CueOverlayView extends View implements Choreographer.FrameCallback {
         }
     }
 
+    /** Прозрачность заливки с учётом активности и прозрачности окна. */
     private int currentAlpha() {
         float visibility = IDLE_VISIBILITY + (1f - IDLE_VISIBILITY) * state.activity;
-        float alpha = Math.min(1f, dotOpacity * visibility / windowAlpha);
-        return Math.round(alpha * 255f);
+        return toAlpha(opacity * visibility / windowAlpha);
     }
 
-    /** Одноцветные точки под тему системы. Выбор темы в настройках — в отдельной фиче. */
-    private void applyPalette(Configuration config) {
-        boolean night = (config.uiMode & Configuration.UI_MODE_NIGHT_MASK) == Configuration.UI_MODE_NIGHT_YES;
-        if (night) {
-            dotColor = Color.rgb(0xEB, 0xEB, 0xF5);
-            dotOpacity = 0.6f;
-        } else {
-            dotColor = Color.rgb(0x3C, 0x3C, 0x43);
-            dotOpacity = 0.55f;
-        }
+    private static int toAlpha(float opacity) {
+        return Math.round(Math.max(0f, Math.min(1f, opacity)) * 255f);
     }
 
     /** Две колонки у каждого края, ряды в шахматном порядке. */
     private void layoutDots(int width, int height) {
         float span = height * VERTICAL_SPAN;
-        int rows = Math.max(3, Math.round(span / (ROW_SPACING_DP * density)) + 1);
+        int rows = OUTER_ROWS;
         float rowStep = span / (rows - 1);
         float top = (height - span) / 2f;
         float margin = EDGE_MARGIN_DP * density;

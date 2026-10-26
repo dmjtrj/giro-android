@@ -1,0 +1,22 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- Статичная тёмная палитра: монохромная, в духе iOS -->
+    <color name="mc_primary">#FFF2F2F7</color>
+    <color name="mc_on_primary">#FF1C1C1E</color>
+    <color name="mc_primary_container">#FF3A3A3C</color>
+    <color name="mc_on_primary_container">#FFF2F2F7</color>
+    <color name="mc_secondary">#FFAEAEB2</color>
+    <color name="mc_on_secondary">#FF1C1C1E</color>
+    <color name="mc_secondary_container">#FF3A3A3C</color>
+    <color name="mc_on_secondary_container">#FFF2F2F7</color>
+    <color name="mc_surface">#FF000000</color>
+    <color name="mc_on_surface">#FFF2F2F7</color>
+    <color name="mc_on_surface_variant">#FFAEAEB2</color>
+    <color name="mc_surface_container_lowest">#FF000000</color>
+    <color name="mc_surface_container_low">#FF0E0E10</color>
+    <color name="mc_surface_container">#FF1C1C1E</color>
+    <color name="mc_surface_container_high">#FF2C2C2E</color>
+    <color name="mc_surface_container_highest">#FF3A3A3C</color>
+    <color name="mc_outline">#FF8E8E93</color>
+    <color name="mc_outline_variant">#FF3A3A3C</color>
+</resources>
