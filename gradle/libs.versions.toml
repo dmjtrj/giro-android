@@ -1,0 +1,9 @@
+[versions]
+agp = "9.4.1"
+material = "1.14.0"
+
+[libraries]
+material = { group = "com.google.android.material", name = "material", version.ref = "material" }
+
+[plugins]
+android-application = { id = "com.android.application", version.ref = "agp" }
