@@ -13,6 +13,7 @@ public final class AppSettings {
     public static final String KEY_DOT_SIZE = "dot_size";
     public static final String KEY_DOT_OPACITY = "dot_opacity";
     public static final String KEY_DOT_COLOR = "dot_color";
+    public static final String KEY_HAPTICS = "haptics";
 
     /** Градации ползунков размера и непрозрачности точек. */
     public static final int MIN_LEVEL = 1;
@@ -33,6 +34,15 @@ public final class AppSettings {
 
     public void setTheme(ThemeMode mode) {
         prefs.edit().putString(KEY_THEME, mode.name()).apply();
+    }
+
+    /** Виброотклик включён по умолчанию. */
+    public boolean hapticsEnabled() {
+        return prefs.getBoolean(KEY_HAPTICS, true);
+    }
+
+    public void setHapticsEnabled(boolean enabled) {
+        prefs.edit().putBoolean(KEY_HAPTICS, enabled).apply();
     }
 
     public DotColor dotColor() {

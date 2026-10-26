@@ -24,6 +24,8 @@ import androidx.core.content.ContextCompat;
 
 import com.motioncues.app.MainActivity;
 import com.motioncues.app.R;
+import com.motioncues.app.haptics.HapticEffect;
+import com.motioncues.app.haptics.Haptics;
 import com.motioncues.app.motion.MotionEngine;
 import com.motioncues.app.settings.AppSettings;
 
@@ -45,6 +47,7 @@ public final class CueOverlayService extends Service {
 
     private static final String ACTION_START = "com.motioncues.app.action.START";
     private static final String ACTION_STOP = "com.motioncues.app.action.STOP";
+    private static final String EXTRA_FROM_NOTIFICATION = "from_notification";
     private static final String CHANNEL_ID = "cues";
     private static final int NOTIFICATION_ID = 1;
 
@@ -112,6 +115,10 @@ public final class CueOverlayService extends Service {
     public int onStartCommand(Intent intent, int flags, int startId) {
         String action = intent != null ? intent.getAction() : null;
         if (ACTION_STOP.equals(action)) {
+            // Выключение из уведомления — тот же отклик, что и с главного экрана
+            if (running && intent.getBooleanExtra(EXTRA_FROM_NOTIFICATION, false)) {
+                Haptics.get(this).play(HapticEffect.CUES_OFF);
+            }
             stopSelf();
             return START_NOT_STICKY;
         }
@@ -211,7 +218,9 @@ public final class CueOverlayService extends Service {
         PendingIntent open = PendingIntent.getActivity(this, 0,
                 new Intent(this, MainActivity.class), PendingIntent.FLAG_IMMUTABLE);
         PendingIntent stop = PendingIntent.getService(this, 1,
-                new Intent(this, CueOverlayService.class).setAction(ACTION_STOP), PendingIntent.FLAG_IMMUTABLE);
+                new Intent(this, CueOverlayService.class).setAction(ACTION_STOP)
+                        .putExtra(EXTRA_FROM_NOTIFICATION, true),
+                PendingIntent.FLAG_IMMUTABLE);
 
         return new Notification.Builder(this, CHANNEL_ID)
                 .setSmallIcon(R.drawable.ic_notification)

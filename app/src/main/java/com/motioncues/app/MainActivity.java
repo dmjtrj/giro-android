@@ -23,6 +23,8 @@ import androidx.core.view.WindowInsetsControllerCompat;
 import com.google.android.material.button.MaterialButtonToggleGroup;
 import com.google.android.material.materialswitch.MaterialSwitch;
 import com.google.android.material.slider.Slider;
+import com.motioncues.app.haptics.HapticEffect;
+import com.motioncues.app.haptics.Haptics;
 import com.motioncues.app.motion.MotionEngine;
 import com.motioncues.app.overlay.CueOverlayService;
 import com.motioncues.app.settings.AppSettings;
@@ -33,6 +35,7 @@ import com.motioncues.app.settings.ThemeMode;
 public final class MainActivity extends AppCompatActivity implements CueOverlayService.StateListener {
 
     private MaterialSwitch cuesSwitch;
+    private Haptics haptics;
     private TextView summary;
     /** Пользователь включил эффект и ушёл выдавать разрешение — включим по возвращении. */
     private boolean pendingStart;
@@ -60,6 +63,8 @@ public final class MainActivity extends AppCompatActivity implements CueOverlayS
         insetsController.setAppearanceLightStatusBars(!night);
         insetsController.setAppearanceLightNavigationBars(!night);
 
+        haptics = Haptics.get(this);
+        setupHapticsSwitch();
         setupThemePicker();
         setupDotColorPicker();
         setupDotSliders();
@@ -79,6 +84,7 @@ public final class MainActivity extends AppCompatActivity implements CueOverlayS
             if (checked) {
                 requestStart();
             } else {
+                haptics.play(HapticEffect.CUES_OFF);
                 CueOverlayService.stop(this);
             }
         });
@@ -127,6 +133,7 @@ public final class MainActivity extends AppCompatActivity implements CueOverlayS
             ThemeMode mode = checkedId == R.id.theme_light ? ThemeMode.LIGHT
                     : checkedId == R.id.theme_dark ? ThemeMode.DARK
                     : ThemeMode.MONET;
+            haptics.play(HapticEffect.SELECT);
             ThemeController.change(this, mode);
         });
     }
@@ -156,6 +163,7 @@ public final class MainActivity extends AppCompatActivity implements CueOverlayS
                     : checkedId == R.id.dot_color_black ? DotColor.BLACK
                     : checkedId == R.id.dot_color_monet ? DotColor.MONET
                     : DotColor.AUTO;
+            haptics.play(HapticEffect.SELECT);
             settings.setDotColor(color);
         });
     }
@@ -169,12 +177,40 @@ public final class MainActivity extends AppCompatActivity implements CueOverlayS
         opacity.setValue(settings.dotOpacity());
         size.addOnChangeListener((slider, value, fromUser) -> {
             if (fromUser) {
+                playSliderStep(value);
                 settings.setDotSize(Math.round(value));
             }
         });
         opacity.addOnChangeListener((slider, value, fromUser) -> {
             if (fromUser) {
+                playSliderStep(value);
                 settings.setDotOpacity(Math.round(value));
+            }
+        });
+    }
+
+    /** Каждое деление — «зубчик», крайние — более плотный упор. */
+    private void playSliderStep(float value) {
+        int level = Math.round(value);
+        boolean edge = level == AppSettings.MIN_LEVEL || level == AppSettings.MAX_LEVEL;
+        haptics.play(edge ? HapticEffect.SLIDER_EDGE : HapticEffect.SLIDER_TICK);
+    }
+
+    private void setupHapticsSwitch() {
+        AppSettings settings = new AppSettings(this);
+        MaterialSwitch hapticsSwitch = findViewById(R.id.haptics_switch);
+        hapticsSwitch.setChecked(settings.hapticsEnabled());
+        hapticsSwitch.setOnCheckedChangeListener((button, checked) -> {
+            if (!button.isPressed()) {
+                return;
+            }
+            if (checked) {
+                settings.setHapticsEnabled(true);
+                haptics.play(HapticEffect.TOGGLE_ON);
+            } else {
+                // Последний отклик до выключения — подтверждает, что вибрация отключена
+                haptics.play(HapticEffect.TOGGLE_OFF);
+                settings.setHapticsEnabled(false);
             }
         });
     }
@@ -200,6 +236,7 @@ public final class MainActivity extends AppCompatActivity implements CueOverlayS
     }
 
     private void startCues() {
+        haptics.play(HapticEffect.CUES_ON);
         CueOverlayService.start(this);
         cuesSwitch.setChecked(true);
         summary.setText(R.string.cues_summary);
