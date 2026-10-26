@@ -15,7 +15,9 @@ import android.graphics.PixelFormat;
 import android.hardware.display.DisplayManager;
 import android.hardware.input.InputManager;
 import android.os.Build;
+import android.os.Handler;
 import android.os.IBinder;
+import android.os.Looper;
 import android.provider.Settings;
 import android.view.Display;
 import android.view.WindowManager;
@@ -34,9 +36,16 @@ import java.util.concurrent.CopyOnWriteArraySet;
 /**
  * Foreground service, который держит поверх всех приложений окно с точками.
  *
- * <p>Окно не перехватывает касания и не получает фокус. Его прозрачность не выше
- * системного порога для «недоверенных» окон — иначе Android 12+ заблокирует
- * касания приложений под ним. На выключенном экране датчики не работают.
+ * <p>Окно не перехватывает касания и не получает фокус. Два варианта окна:
+ * <ul>
+ *   <li>обычный оверлей ({@code TYPE_APPLICATION_OVERLAY}) — поверх приложений, но под
+ *       шторкой; прозрачность не выше системного порога для «недоверенных» окон, иначе
+ *       Android 12+ заблокирует касания приложений под ним;</li>
+ *   <li>«Поверх шторки» ({@code TYPE_ACCESSIBILITY_OVERLAY}) — окно службы специальных
+ *       возможностей: поверх шторки и системных окон, без потолка прозрачности.</li>
+ * </ul>
+ * Вариант переключается на лету, когда меняется настройка или включается/выключается служба.
+ * На выключенном экране датчики не работают.
  */
 public final class CueOverlayService extends Service {
 
@@ -53,9 +62,14 @@ public final class CueOverlayService extends Service {
 
     private static final CopyOnWriteArraySet<StateListener> listeners = new CopyOnWriteArraySet<>();
     private static volatile boolean running;
+    /** Открыт ли экран приложения — тогда точки скрыты. Только главный поток. */
+    private static boolean appInForeground;
+    private static CueOverlayService current;
 
+    private final Handler handler = new Handler(Looper.getMainLooper());
     private WindowManager windowManager;
     private CueOverlayView overlayView;
+    private MotionEngine engine;
     private AppSettings settings;
     private boolean receiverRegistered;
 
@@ -63,10 +77,11 @@ public final class CueOverlayService extends Service {
         if (overlayView == null) {
             return;
         }
-        if (AppSettings.KEY_THEME.equals(key) || AppSettings.KEY_DOT_COLOR.equals(key)) {
-            overlayView.setColors(settings.theme(), settings.dotColor());
-        } else if (AppSettings.KEY_DOT_SIZE.equals(key) || AppSettings.KEY_DOT_OPACITY.equals(key)) {
-            overlayView.setDotStyle(settings.dotSize(), settings.dotOpacity());
+        if (AppSettings.KEY_ABOVE_SYSTEM.equals(key)) {
+            refreshWindow();
+        } else {
+            // Цвет, размер, количество, режим, чувствительность, «Как на iPhone» — на лету
+            overlayView.applySettings();
         }
     };
 
@@ -94,13 +109,45 @@ public final class CueOverlayService extends Service {
         }
     }
 
+    /** Экраны приложения сообщают, открыты ли они: пока открыты, точки эффекта скрыты. */
+    public static void setAppInForeground(boolean inForeground) {
+        appInForeground = inForeground;
+        if (current != null && current.overlayView != null) {
+            current.overlayView.setHidden(inForeground);
+        }
+    }
+
     public static boolean isRunning() {
         return running;
     }
 
-    /** Есть ли разрешение «Поверх других окон». */
+    /** Можно ли показать точки: есть разрешение «Поверх других окон» или работает режим «Поверх шторки». */
     public static boolean canShowOverlay(Context context) {
-        return Settings.canDrawOverlays(context);
+        return Settings.canDrawOverlays(context) || useAccessibilityWindow(new AppSettings(context));
+    }
+
+    /**
+     * Пересоздаёт окно с точками в нужном слое — когда меняется настройка «Поверх шторки»
+     * или служба специальных возможностей включается/выключается. Только главный поток.
+     */
+    public static void refreshWindow() {
+        CueOverlayService service = current;
+        if (service == null || service.overlayView == null) {
+            return;
+        }
+        service.handler.post(() -> {
+            if (current != service || service.overlayView == null) {
+                return;
+            }
+            service.hideOverlay();
+            if (!service.showOverlay()) {
+                service.stopSelf();
+            }
+        });
+    }
+
+    private static boolean useAccessibilityWindow(AppSettings settings) {
+        return settings.aboveSystem() && CueAccessibilityService.current() != null;
     }
 
     public static void addStateListener(StateListener listener) {
@@ -138,7 +185,14 @@ public final class CueOverlayService extends Service {
     }
 
     @Override
+    public void onCreate() {
+        super.onCreate();
+        current = this;
+    }
+
+    @Override
     public void onDestroy() {
+        current = null;
         hideOverlay();
         setRunning(false);
         super.onDestroy();
@@ -150,24 +204,31 @@ public final class CueOverlayService extends Service {
     }
 
     private boolean showOverlay() {
+        settings = new AppSettings(this);
         if (!canShowOverlay(this)) {
             return false;
         }
-        MotionEngine engine = new MotionEngine(this);
+        engine = new MotionEngine(this);
         if (!engine.isSupported()) {
             return false;
         }
 
+        // Окно службы специальных возможностей — поверх шторки; иначе обычный оверлей
+        boolean aboveSystem = useAccessibilityWindow(settings);
+        Context owner = aboveSystem ? CueAccessibilityService.current() : this;
+        int type = aboveSystem
+                ? WindowManager.LayoutParams.TYPE_ACCESSIBILITY_OVERLAY
+                : WindowManager.LayoutParams.TYPE_APPLICATION_OVERLAY;
+
         // Оконный контекст получает смену ориентации и темы, как обычное окно
         Display display = getSystemService(DisplayManager.class).getDisplay(Display.DEFAULT_DISPLAY);
-        Context windowContext = createWindowContext(display,
-                WindowManager.LayoutParams.TYPE_APPLICATION_OVERLAY, null);
+        Context windowContext = owner.createWindowContext(display, type, null);
         windowManager = windowContext.getSystemService(WindowManager.class);
 
         WindowManager.LayoutParams params = new WindowManager.LayoutParams(
                 WindowManager.LayoutParams.MATCH_PARENT,
                 WindowManager.LayoutParams.MATCH_PARENT,
-                WindowManager.LayoutParams.TYPE_APPLICATION_OVERLAY,
+                type,
                 WindowManager.LayoutParams.FLAG_NOT_FOCUSABLE
                         | WindowManager.LayoutParams.FLAG_NOT_TOUCHABLE
                         | WindowManager.LayoutParams.FLAG_LAYOUT_IN_SCREEN
@@ -178,12 +239,13 @@ public final class CueOverlayService extends Service {
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.UPSIDE_DOWN_CAKE) {
             params.setCanPlayMoveAnimation(false);
         }
-        params.alpha = windowContext.getSystemService(InputManager.class).getMaximumObscuringOpacityForTouch();
+        // Окно службы — доверенное, потолка прозрачности нет: белые и чёрные точки — чистые
+        params.alpha = aboveSystem ? 1f
+                : windowContext.getSystemService(InputManager.class).getMaximumObscuringOpacityForTouch();
         params.setTitle(getString(R.string.app_name));
 
-        settings = new AppSettings(this);
-        overlayView = new CueOverlayView(windowContext, engine, params.alpha,
-                settings.theme(), settings.dotColor(), settings.dotSize(), settings.dotOpacity());
+        overlayView = new CueOverlayView(windowContext, engine, params.alpha);
+        overlayView.setHidden(appInForeground);
         windowManager.addView(overlayView, params);
         overlayView.start();
         settings.registerListener(settingsListener);

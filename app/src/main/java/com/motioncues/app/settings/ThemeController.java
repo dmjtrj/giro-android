@@ -40,6 +40,10 @@ public final class ThemeController {
             return;
         }
         boolean wasNight = isNight(activity, old);
+        // Цвет точек «Monet» есть только в теме Monet — в остальных возвращаемся к «Авто»
+        if (mode != ThemeMode.MONET && settings.dotColor() == DotColor.MONET) {
+            settings.setDotColor(DotColor.AUTO);
+        }
         settings.setTheme(mode);
         AppCompatDelegate.setDefaultNightMode(nightModeFor(mode));
         if (isNight(activity, mode) == wasNight) {

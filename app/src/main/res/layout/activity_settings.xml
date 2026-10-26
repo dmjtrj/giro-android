@@ -1,0 +1,411 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:id="@+id/root"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:orientation="vertical">
+
+    <com.google.android.material.appbar.MaterialToolbar
+        android:id="@+id/toolbar"
+        android:layout_width="match_parent"
+        android:layout_height="?attr/actionBarSize"
+        app:navigationContentDescription="@string/navigate_up"
+        app:navigationIcon="@drawable/ic_arrow_back"
+        app:title="@string/settings_title" />
+
+    <ScrollView
+        android:layout_width="match_parent"
+        android:layout_height="0dp"
+        android:layout_weight="1">
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="vertical"
+            android:paddingHorizontal="16dp"
+            android:paddingBottom="32dp">
+
+            <!-- Превью сразу показывает, как меняются точки -->
+            <com.google.android.material.card.MaterialCardView
+                style="@style/Widget.MotionCues.Card"
+                android:layout_width="match_parent"
+                android:layout_height="180dp"
+                android:layout_marginTop="8dp"
+                app:cardCornerRadius="28dp">
+
+                <com.motioncues.app.overlay.CuePreviewView
+                    android:layout_width="match_parent"
+                    android:layout_height="match_parent"
+                    android:contentDescription="@string/preview_description" />
+
+            </com.google.android.material.card.MaterialCardView>
+
+            <!-- «Как на iPhone»: фиксирует настройки точек и движения -->
+            <com.google.android.material.card.MaterialCardView
+                android:id="@+id/iphone_row"
+                style="@style/Widget.MotionCues.Card"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="16dp"
+                android:clickable="true"
+                android:focusable="true"
+                android:hapticFeedbackEnabled="false">
+
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:gravity="center_vertical"
+                    android:minHeight="72dp"
+                    android:orientation="horizontal"
+                    android:paddingVertical="16dp"
+                    android:paddingStart="20dp"
+                    android:paddingEnd="16dp">
+
+                    <LinearLayout
+                        android:layout_width="0dp"
+                        android:layout_height="wrap_content"
+                        android:layout_weight="1"
+                        android:orientation="vertical">
+
+                        <TextView
+                            style="@style/Widget.MotionCues.ItemTitle"
+                            android:text="@string/iphone_mode_title" />
+
+                        <TextView
+                            style="@style/Widget.MotionCues.ItemSummary"
+                            android:text="@string/iphone_mode_summary" />
+
+                    </LinearLayout>
+
+                    <com.google.android.material.materialswitch.MaterialSwitch
+                        android:id="@+id/iphone_switch"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_marginStart="12dp"
+                        android:clickable="false"
+                        android:focusable="false"
+                        android:hapticFeedbackEnabled="false"
+                        android:importantForAccessibility="no" />
+
+                </LinearLayout>
+
+            </com.google.android.material.card.MaterialCardView>
+
+            <!-- Точки -->
+            <TextView
+                style="@style/Widget.MotionCues.SectionHeader"
+                android:text="@string/section_dots" />
+
+            <com.google.android.material.card.MaterialCardView
+                android:id="@+id/dots_card"
+                style="@style/Widget.MotionCues.Card"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content">
+
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:orientation="vertical"
+                    android:paddingHorizontal="20dp"
+                    android:paddingVertical="20dp">
+
+                    <TextView
+                        style="@style/Widget.MotionCues.ItemTitle"
+                        android:text="@string/dot_color_title" />
+
+                    <com.google.android.material.button.MaterialButtonToggleGroup
+                        android:id="@+id/dot_color_group"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:layout_marginTop="12dp"
+                        app:selectionRequired="true"
+                        app:singleSelection="true">
+
+                        <Button
+                            android:id="@+id/dot_color_auto"
+                            style="@style/Widget.MotionCues.SegmentButton"
+                            android:text="@string/dot_color_auto" />
+
+                        <Button
+                            android:id="@+id/dot_color_white"
+                            style="@style/Widget.MotionCues.SegmentButton"
+                            android:text="@string/dot_color_white" />
+
+                        <Button
+                            android:id="@+id/dot_color_black"
+                            style="@style/Widget.MotionCues.SegmentButton"
+                            android:text="@string/dot_color_black" />
+
+                        <Button
+                            android:id="@+id/dot_color_monet"
+                            style="@style/Widget.MotionCues.SegmentButton"
+                            android:text="@string/dot_color_monet" />
+
+                    </com.google.android.material.button.MaterialButtonToggleGroup>
+
+                    <TextView
+                        style="@style/Widget.MotionCues.ItemTitle"
+                        android:layout_marginTop="24dp"
+                        android:text="@string/dot_size_title" />
+
+                    <com.google.android.material.slider.Slider
+                        android:id="@+id/dot_size_slider"
+                        style="@style/Widget.MotionCues.LevelSlider"
+                        android:contentDescription="@string/dot_size_title" />
+
+                    <TextView
+                        style="@style/Widget.MotionCues.ItemTitle"
+                        android:layout_marginTop="12dp"
+                        android:text="@string/dot_count_title" />
+
+                    <com.google.android.material.slider.Slider
+                        android:id="@+id/dot_count_slider"
+                        style="@style/Widget.MotionCues.LevelSlider"
+                        android:contentDescription="@string/dot_count_title"
+                        android:valueTo="4" />
+
+                    <TextView
+                        android:id="@+id/dot_opacity_title"
+                        style="@style/Widget.MotionCues.ItemTitle"
+                        android:layout_marginTop="12dp"
+                        android:text="@string/dot_opacity_title" />
+
+                    <com.google.android.material.slider.Slider
+                        android:id="@+id/dot_opacity_slider"
+                        style="@style/Widget.MotionCues.LevelSlider"
+                        android:contentDescription="@string/dot_opacity_title" />
+
+                </LinearLayout>
+
+            </com.google.android.material.card.MaterialCardView>
+
+            <!-- Движение -->
+            <TextView
+                style="@style/Widget.MotionCues.SectionHeader"
+                android:text="@string/section_motion" />
+
+            <com.google.android.material.card.MaterialCardView
+                android:id="@+id/motion_card"
+                style="@style/Widget.MotionCues.Card"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content">
+
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:orientation="vertical"
+                    android:paddingHorizontal="20dp"
+                    android:paddingVertical="20dp">
+
+                    <TextView
+                        style="@style/Widget.MotionCues.ItemTitle"
+                        android:text="@string/motion_mode_title" />
+
+                    <com.google.android.material.button.MaterialButtonToggleGroup
+                        android:id="@+id/motion_mode_group"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:layout_marginTop="12dp"
+                        app:selectionRequired="true"
+                        app:singleSelection="true">
+
+                        <Button
+                            android:id="@+id/motion_mode_inertia"
+                            style="@style/Widget.MotionCues.SegmentButton"
+                            android:text="@string/motion_mode_inertia" />
+
+                        <Button
+                            android:id="@+id/motion_mode_gyroscope"
+                            style="@style/Widget.MotionCues.SegmentButton"
+                            android:text="@string/motion_mode_gyroscope" />
+
+                    </com.google.android.material.button.MaterialButtonToggleGroup>
+
+                    <TextView
+                        android:id="@+id/motion_mode_summary"
+                        style="@style/Widget.MotionCues.ItemSummary"
+                        android:layout_marginTop="8dp" />
+
+                    <TextView
+                        style="@style/Widget.MotionCues.ItemTitle"
+                        android:layout_marginTop="24dp"
+                        android:text="@string/sensitivity_title" />
+
+                    <TextView
+                        style="@style/Widget.MotionCues.ItemSummary"
+                        android:text="@string/sensitivity_summary" />
+
+                    <com.google.android.material.slider.Slider
+                        android:id="@+id/sensitivity_slider"
+                        style="@style/Widget.MotionCues.LevelSlider"
+                        android:layout_marginTop="4dp"
+                        android:contentDescription="@string/sensitivity_title" />
+
+                </LinearLayout>
+
+            </com.google.android.material.card.MaterialCardView>
+
+            <!-- Отображение -->
+            <TextView
+                style="@style/Widget.MotionCues.SectionHeader"
+                android:text="@string/section_display" />
+
+            <com.google.android.material.card.MaterialCardView
+                android:id="@+id/above_system_row"
+                style="@style/Widget.MotionCues.Card"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:clickable="true"
+                android:focusable="true"
+                android:hapticFeedbackEnabled="false">
+
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:gravity="center_vertical"
+                    android:minHeight="72dp"
+                    android:orientation="horizontal"
+                    android:paddingVertical="16dp"
+                    android:paddingStart="20dp"
+                    android:paddingEnd="16dp">
+
+                    <LinearLayout
+                        android:layout_width="0dp"
+                        android:layout_height="wrap_content"
+                        android:layout_weight="1"
+                        android:orientation="vertical">
+
+                        <TextView
+                            style="@style/Widget.MotionCues.ItemTitle"
+                            android:text="@string/above_system_title" />
+
+                        <TextView
+                            android:id="@+id/above_system_summary"
+                            style="@style/Widget.MotionCues.ItemSummary" />
+
+                    </LinearLayout>
+
+                    <com.google.android.material.materialswitch.MaterialSwitch
+                        android:id="@+id/above_system_switch"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_marginStart="12dp"
+                        android:clickable="false"
+                        android:focusable="false"
+                        android:hapticFeedbackEnabled="false"
+                        android:importantForAccessibility="no" />
+
+                </LinearLayout>
+
+            </com.google.android.material.card.MaterialCardView>
+
+            <!-- Оформление -->
+            <TextView
+                style="@style/Widget.MotionCues.SectionHeader"
+                android:text="@string/section_appearance" />
+
+            <com.google.android.material.card.MaterialCardView
+                style="@style/Widget.MotionCues.Card"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content">
+
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:orientation="vertical"
+                    android:paddingHorizontal="20dp"
+                    android:paddingVertical="20dp">
+
+                    <TextView
+                        style="@style/Widget.MotionCues.ItemTitle"
+                        android:text="@string/theme_title" />
+
+                    <com.google.android.material.button.MaterialButtonToggleGroup
+                        android:id="@+id/theme_group"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:layout_marginTop="12dp"
+                        app:selectionRequired="true"
+                        app:singleSelection="true">
+
+                        <Button
+                            android:id="@+id/theme_light"
+                            style="@style/Widget.MotionCues.SegmentButton"
+                            android:text="@string/theme_light" />
+
+                        <Button
+                            android:id="@+id/theme_dark"
+                            style="@style/Widget.MotionCues.SegmentButton"
+                            android:text="@string/theme_dark" />
+
+                        <Button
+                            android:id="@+id/theme_monet"
+                            style="@style/Widget.MotionCues.SegmentButton"
+                            android:text="@string/theme_monet" />
+
+                    </com.google.android.material.button.MaterialButtonToggleGroup>
+
+                </LinearLayout>
+
+            </com.google.android.material.card.MaterialCardView>
+
+            <!-- Отклик -->
+            <TextView
+                style="@style/Widget.MotionCues.SectionHeader"
+                android:text="@string/section_feedback" />
+
+            <com.google.android.material.card.MaterialCardView
+                android:id="@+id/haptics_row"
+                style="@style/Widget.MotionCues.Card"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:clickable="true"
+                android:focusable="true"
+                android:hapticFeedbackEnabled="false">
+
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:gravity="center_vertical"
+                    android:minHeight="72dp"
+                    android:orientation="horizontal"
+                    android:paddingVertical="16dp"
+                    android:paddingStart="20dp"
+                    android:paddingEnd="16dp">
+
+                    <LinearLayout
+                        android:layout_width="0dp"
+                        android:layout_height="wrap_content"
+                        android:layout_weight="1"
+                        android:orientation="vertical">
+
+                        <TextView
+                            style="@style/Widget.MotionCues.ItemTitle"
+                            android:text="@string/haptics_switch" />
+
+                        <TextView
+                            style="@style/Widget.MotionCues.ItemSummary"
+                            android:text="@string/haptics_summary" />
+
+                    </LinearLayout>
+
+                    <com.google.android.material.materialswitch.MaterialSwitch
+                        android:id="@+id/haptics_switch"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_marginStart="12dp"
+                        android:clickable="false"
+                        android:focusable="false"
+                        android:hapticFeedbackEnabled="false"
+                        android:importantForAccessibility="no" />
+
+                </LinearLayout>
+
+            </com.google.android.material.card.MaterialCardView>
+
+        </LinearLayout>
+
+    </ScrollView>
+
+</LinearLayout>

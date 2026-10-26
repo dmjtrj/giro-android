@@ -64,14 +64,38 @@ public class CuePaletteTest {
     }
 
     @Test
-    public void monetColor_followsEffectiveTheme() {
-        // Светлая тема — тёмный тон обоев, тёмная — светлый, независимо от системы
-        for (boolean systemNight : SYSTEM_NIGHT) {
-            assertEquals(ACCENT_ON_LIGHT, palette(ThemeMode.LIGHT, DotColor.MONET, systemNight).fill);
-            assertEquals(ACCENT_ON_DARK, palette(ThemeMode.DARK, DotColor.MONET, systemNight).fill);
-        }
+    public void monetColor_inMonetTheme_followsSystem() {
         assertEquals(ACCENT_ON_LIGHT, palette(ThemeMode.MONET, DotColor.MONET, false).fill);
         assertEquals(ACCENT_ON_DARK, palette(ThemeMode.MONET, DotColor.MONET, true).fill);
+    }
+
+    @Test
+    public void monetColor_outsideMonetTheme_behavesAsAuto() {
+        for (ThemeMode mode : new ThemeMode[]{ThemeMode.LIGHT, ThemeMode.DARK}) {
+            for (boolean systemNight : SYSTEM_NIGHT) {
+                CuePalette monet = palette(mode, DotColor.MONET, systemNight);
+                CuePalette auto = palette(mode, DotColor.AUTO, systemNight);
+                assertEquals(auto.fill, monet.fill);
+                assertEquals(auto.ring, monet.ring);
+            }
+        }
+    }
+
+    @Test
+    public void whiteAndBlack_areSolid_soWallpaperDoesNotTintThem() {
+        for (ThemeMode mode : ThemeMode.values()) {
+            assertTrue(palette(mode, DotColor.WHITE, true).solid);
+            assertTrue(palette(mode, DotColor.BLACK, false).solid);
+            assertTrue(!palette(mode, DotColor.AUTO, false).solid);
+        }
+        CuePalette white = palette(ThemeMode.MONET, DotColor.WHITE, true);
+        CuePalette auto = palette(ThemeMode.MONET, DotColor.AUTO, true);
+        for (int level = 1; level <= 5; level++) {
+            // Плотные точки не приглушаются в покое и заметно непрозрачнее обычных
+            assertEquals(white.opacity(level, 0f), white.opacity(level, 1f), 0f);
+            assertEquals("чистый белый без просвечивания", 1f, white.opacity(level, 0f), 0f);
+            assertTrue(white.opacity(level, 0f) > auto.opacity(level, 0f));
+        }
     }
 
     @Test
