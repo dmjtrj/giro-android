@@ -15,12 +15,14 @@ import com.google.android.material.materialswitch.MaterialSwitch;
 import com.google.android.material.slider.Slider;
 import com.motioncues.app.haptics.HapticEffect;
 import com.motioncues.app.haptics.Haptics;
+import com.motioncues.app.haptics.SliderHaptic;
 import com.motioncues.app.overlay.CueAccessibilityService;
 import com.motioncues.app.settings.AppSettings;
 import com.motioncues.app.settings.DotColor;
 import com.motioncues.app.settings.MotionMode;
 import com.motioncues.app.settings.ThemeController;
 import com.motioncues.app.settings.ThemeMode;
+import com.motioncues.app.ui.LevelSlider;
 import com.motioncues.app.ui.ThemedActivity;
 
 import java.util.function.IntConsumer;
@@ -46,11 +48,13 @@ public final class SettingsActivity extends ThemedActivity {
 
         setupIphoneMode();
         setupDotColor();
-        setupLevelSlider(R.id.dot_size_slider, settings.dotSize(), settings::setDotSize);
-        setupLevelSlider(R.id.dot_count_slider, settings.dotCount(), settings::setDotCount);
-        setupLevelSlider(R.id.dot_opacity_slider, settings.dotOpacity(), settings::setDotOpacity);
+        setupLevelSlider(R.id.dot_size_slider, settings.dotSize(), settings::setDotSize, SliderHaptic.SIZE);
+        setupLevelSlider(R.id.dot_count_slider, settings.dotCount(), settings::setDotCount, SliderHaptic.COUNT);
+        setupLevelSlider(R.id.dot_opacity_slider, settings.dotOpacity(), settings::setDotOpacity,
+                SliderHaptic.OPACITY);
         setupMotionMode();
-        setupLevelSlider(R.id.sensitivity_slider, settings.sensitivity(), settings::setSensitivity);
+        setupLevelSlider(R.id.sensitivity_slider, settings.sensitivity(), settings::setSensitivity,
+                SliderHaptic.SENSITIVITY);
         setupTheme();
         setupAboveSystem();
         setupHaptics();
@@ -62,7 +66,7 @@ public final class SettingsActivity extends ThemedActivity {
         toggle.setChecked(settings.iphoneMode());
         findViewById(R.id.iphone_row).setOnClickListener(v -> {
             boolean enable = !settings.iphoneMode();
-            haptics.play(enable ? HapticEffect.TOGGLE_ON : HapticEffect.TOGGLE_OFF);
+            haptics.play(enable ? HapticEffect.IPHONE_ON : HapticEffect.TOGGLE_OFF);
             settings.setIphoneMode(enable);
             toggle.setChecked(enable);
             updateLocks();
@@ -193,18 +197,15 @@ public final class SettingsActivity extends ThemedActivity {
         findViewById(R.id.dot_opacity_title).setAlpha(solid ? 0.38f : 1f);
     }
 
-    /** Ползунок сохраняет значение на каждом делении — превью и эффект меняются во время перетаскивания. */
-    private void setupLevelSlider(int id, int level, IntConsumer save) {
+    /**
+     * Ползунок едет плавно; на каждом новом делении — своя вибрация и сохранение,
+     * так что превью и эффект меняются прямо во время перетаскивания.
+     */
+    private void setupLevelSlider(int id, int level, IntConsumer save, SliderHaptic kind) {
         Slider slider = findViewById(id);
-        slider.setValue(level);
-        slider.addOnChangeListener((s, value, fromUser) -> {
-            if (!fromUser) {
-                return;
-            }
-            int newLevel = Math.round(value);
-            // Каждое деление — «зубчик», крайние — более плотный упор
-            boolean edge = value <= s.getValueFrom() || value >= s.getValueTo();
-            haptics.play(edge ? HapticEffect.SLIDER_EDGE : HapticEffect.SLIDER_TICK);
+        int levels = Math.round(slider.getValueTo() - slider.getValueFrom()) + 1;
+        LevelSlider.attach(slider, level, newLevel -> {
+            haptics.playSlider(kind, newLevel, levels);
             save.accept(newLevel);
         });
     }
@@ -267,8 +268,7 @@ public final class SettingsActivity extends ThemedActivity {
                 settings.setHapticsEnabled(true);
                 haptics.play(HapticEffect.TOGGLE_ON);
             } else {
-                // Последний отклик до выключения — подтверждает, что вибрация отключена
-                haptics.play(HapticEffect.TOGGLE_OFF);
+                // Виброотклик выключили — тишина сразу, без прощального тика
                 settings.setHapticsEnabled(false);
             }
             hapticsSwitch.setChecked(enable);

@@ -11,14 +11,12 @@ import android.util.Log;
 import com.motioncues.app.settings.AppSettings;
 
 import java.util.EnumMap;
+import java.util.HashMap;
 
 /**
  * Виброотклик приложения. Выбирает лучший способ, который умеет вибромотор:
- * <ol>
- *   <li>огибающая с управлением частотой (Android 16+, новые Pixel);</li>
- *   <li>композиция из примитивов (Pixel 6+ и другие моторы с COMPOSE_EFFECTS);</li>
- *   <li>готовые системные эффекты — на остальных устройствах.</li>
- * </ol>
+ * композиция из примитивов (Pixel 6+ и другие моторы с COMPOSE_EFFECTS) или
+ * готовые системные эффекты — на остальных устройствах.
  * Решение проверяется по возможностям мотора, а не по модели телефона.
  * Эффекты собираются один раз и кэшируются.
  */
@@ -30,8 +28,9 @@ public final class Haptics {
 
     private final Vibrator vibrator;
     private final AppSettings settings;
-    private final boolean envelopesSupported;
     private final EnumMap<HapticEffect, VibrationEffect> cache = new EnumMap<>(HapticEffect.class);
+    /** Вибрации делений ползунков: ключ — вид ползунка, деление и число делений. */
+    private final HashMap<Integer, VibrationEffect> sliderCache = new HashMap<>();
 
     public static synchronized Haptics get(Context context) {
         if (instance == null) {
@@ -43,10 +42,7 @@ public final class Haptics {
     private Haptics(Context context) {
         vibrator = context.getSystemService(VibratorManager.class).getDefaultVibrator();
         settings = new AppSettings(context);
-        envelopesSupported = Build.VERSION.SDK_INT >= Build.VERSION_CODES.BAKLAVA
-                && vibrator.areEnvelopeEffectsSupported();
-        Log.i(TAG, "envelopes=" + envelopesSupported
-                + " primitives=" + vibrator.areAllPrimitivesSupported(allPrimitives()));
+        Log.i(TAG, "primitives=" + vibrator.areAllPrimitivesSupported(allPrimitives()));
     }
 
     /** Проигрывает эффект, если виброотклик включён в настройках. */
@@ -59,6 +55,32 @@ public final class Haptics {
             vibration = build(effect);
             cache.put(effect, vibration);
         }
+        vibrate(vibration);
+    }
+
+    /**
+     * Вибрация деления ползунка: у каждого ползунка свой характер, деление узнаётся на ощупь.
+     *
+     * @param levels сколько всего делений (деления считаются от 1)
+     */
+    public void playSlider(SliderHaptic kind, int level, int levels) {
+        if (!settings.hapticsEnabled() || !vibrator.hasVibrator()) {
+            return;
+        }
+        int key = (kind.ordinal() * 16 + levels) * 16 + level;
+        VibrationEffect vibration = sliderCache.get(key);
+        if (vibration == null) {
+            if (vibrator.areAllPrimitivesSupported(HapticRecipes.sliderPrimitives(kind, level, levels))) {
+                vibration = compose(HapticRecipes.slider(kind, level, levels));
+            } else {
+                vibration = VibrationEffect.createPredefined(HapticRecipes.sliderPredefined(kind));
+            }
+            sliderCache.put(key, vibration);
+        }
+        vibrate(vibration);
+    }
+
+    private void vibrate(VibrationEffect vibration) {
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
             // Касание пользователя: система учитывает настройку «Отклик на касания»
             vibrator.vibrate(vibration, VibrationAttributes.createForUsage(VibrationAttributes.USAGE_TOUCH));
@@ -67,33 +89,19 @@ public final class Haptics {
         }
     }
 
-    private VibrationEffect build(HapticEffect effect) {
-        if (envelopesSupported) {
-            HapticRecipes.EnvelopePoint[] points = HapticRecipes.envelope(effect);
-            if (points != null) {
-                return buildEnvelope(effect, points);
-            }
+    private static VibrationEffect compose(HapticRecipes.Step[] steps) {
+        VibrationEffect.Composition composition = VibrationEffect.startComposition();
+        for (HapticRecipes.Step step : steps) {
+            composition.addPrimitive(step.primitive, step.scale, step.delayMs);
         }
-        if (vibrator.areAllPrimitivesSupported(HapticRecipes.primitives(effect))) {
-            VibrationEffect.Composition composition = VibrationEffect.startComposition();
-            for (HapticRecipes.Step step : HapticRecipes.composition(effect)) {
-                composition.addPrimitive(step.primitive, step.scale, step.delayMs);
-            }
-            return composition.compose();
-        }
-        return VibrationEffect.createPredefined(HapticRecipes.predefined(effect));
+        return composition.compose();
     }
 
-    private static VibrationEffect buildEnvelope(HapticEffect effect, HapticRecipes.EnvelopePoint[] points) {
-        if (Build.VERSION.SDK_INT < Build.VERSION_CODES.BAKLAVA) {
-            throw new IllegalStateException("Envelopes need Android 16");
+    private VibrationEffect build(HapticEffect effect) {
+        if (vibrator.areAllPrimitivesSupported(HapticRecipes.primitives(effect))) {
+            return compose(HapticRecipes.composition(effect));
         }
-        VibrationEffect.BasicEnvelopeBuilder builder = new VibrationEffect.BasicEnvelopeBuilder()
-                .setInitialSharpness(HapticRecipes.envelopeInitialSharpness(effect));
-        for (HapticRecipes.EnvelopePoint point : points) {
-            builder.addControlPoint(point.intensity, point.sharpness, point.durationMs);
-        }
-        return builder.build();
+        return VibrationEffect.createPredefined(HapticRecipes.predefined(effect));
     }
 
     private static int[] allPrimitives() {
@@ -101,7 +109,7 @@ public final class Haptics {
                 VibrationEffect.Composition.PRIMITIVE_CLICK,
                 VibrationEffect.Composition.PRIMITIVE_TICK,
                 VibrationEffect.Composition.PRIMITIVE_LOW_TICK,
-                VibrationEffect.Composition.PRIMITIVE_QUICK_RISE,
-                VibrationEffect.Composition.PRIMITIVE_QUICK_FALL};
+                VibrationEffect.Composition.PRIMITIVE_SPIN,
+                VibrationEffect.Composition.PRIMITIVE_THUD};
     }
 }

@@ -3,14 +3,12 @@
     <string name="app_name">Сигналы движения</string>
 
     <!-- Главный экран -->
-    <string name="main_switch_title">Использовать</string>
-    <string name="main_switch_on">Сигналы движения включены</string>
-    <string name="main_switch_off">Сигналы движения выключены</string>
+    <string name="power_turn_on">Включить сигналы движения</string>
+    <string name="power_turn_off">Выключить сигналы движения</string>
     <string name="cues_summary">Точки по краям экрана повторяют разгон, торможение и повороты машины. Глаза видят движение, которое чувствует тело, — и укачивает меньше.</string>
     <string name="sensors_unsupported">На этом устройстве нет нужных датчиков движения</string>
     <string name="preview_description">Превью точек</string>
     <string name="settings_title">Настройки</string>
-    <string name="settings_row_summary">Цвет и размер точек, чувствительность, оформление, виброотклик</string>
 
     <!-- Онбординг разрешения -->
     <string name="overlay_dialog_title">Показ поверх приложений</string>

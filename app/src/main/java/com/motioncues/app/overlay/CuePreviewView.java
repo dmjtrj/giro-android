@@ -1,5 +1,8 @@
 package com.motioncues.app.overlay;
 
+import android.animation.Animator;
+import android.animation.AnimatorListenerAdapter;
+import android.animation.ValueAnimator;
 import android.content.Context;
 import android.content.SharedPreferences;
 import android.content.res.Configuration;
@@ -21,7 +24,8 @@ import com.motioncues.app.settings.ThemeMode;
  * фильтры и физика ({@link CueFlow}), та же чувствительность, цвет, размер и непрозрачность.
  * Двигаете телефон — точки в карточке смещаются так же, как будут смещаться на экране.
  *
- * <p>Датчики и анимация включены, только пока превью видно на экране.
+ * <p>Датчики и анимация включены, только пока превью видно на экране и точки показаны
+ * ({@link #setDotsShown}): на главном экране при выключенном эффекте точки плавно гаснут.
  */
 public final class CuePreviewView extends View implements Choreographer.FrameCallback {
 
@@ -38,6 +42,8 @@ public final class CuePreviewView extends View implements Choreographer.FrameCal
     /** Смещение в том же масштабе, что и ряды: относительно решётки — как в эффекте (там 40 dp). */
     private static final float TRAVEL_DP = 40f * ROW_SCALE;
     private static final float REDRAW_EPSILON_PX = 0.05f;
+    /** Плавность появления и исчезания точек. */
+    private static final long SHOW_ANIMATION_MS = 220;
 
     private final DotRenderer renderer;
     private final float density;
@@ -51,6 +57,10 @@ public final class CuePreviewView extends View implements Choreographer.FrameCal
     private int countLevel = -1;
 
     private boolean animating;
+    /** Показывать ли точки; {@link #shown} плавно идёт к 1 или 0. */
+    private boolean dotsShown = true;
+    private float shown = 1f;
+    private ValueAnimator shownAnimator;
     private float drawnX = Float.NaN, drawnY = Float.NaN;
     private float drawnActivity = -1f;
 
@@ -67,6 +77,39 @@ public final class CuePreviewView extends View implements Choreographer.FrameCal
         engine = new MotionEngine(context);
         flow = new CueFlow(engine);
         readSettings();
+    }
+
+    /**
+     * Показывает или плавно гасит точки. Пока точки скрыты, датчики и анимация
+     * превью остановлены.
+     */
+    public void setDotsShown(boolean show, boolean animate) {
+        if (shownAnimator != null) {
+            shownAnimator.cancel();
+            shownAnimator = null;
+        }
+        dotsShown = show;
+        float target = show ? 1f : 0f;
+        if (!animate || !isAttachedToWindow()) {
+            shown = target;
+            updateAnimation();
+            invalidate();
+            return;
+        }
+        updateAnimation();
+        shownAnimator = ValueAnimator.ofFloat(shown, target).setDuration(SHOW_ANIMATION_MS);
+        shownAnimator.addUpdateListener(a -> {
+            shown = (float) a.getAnimatedValue();
+            invalidate();
+        });
+        shownAnimator.addListener(new AnimatorListenerAdapter() {
+            @Override
+            public void onAnimationEnd(Animator animation) {
+                // Погасли — датчики больше не нужны
+                updateAnimation();
+            }
+        });
+        shownAnimator.start();
     }
 
     @Override
@@ -137,7 +180,7 @@ public final class CuePreviewView extends View implements Choreographer.FrameCal
         drawnY = flow.fieldY();
         drawnActivity = flow.activity();
         // Та же формула видимости, что у эффекта
-        int alpha = Math.round(Math.min(1f, palette.opacity(opacityLevel, drawnActivity)) * 255f);
+        int alpha = Math.round(Math.min(1f, palette.opacity(opacityLevel, drawnActivity)) * shown * 255f);
         renderer.draw(canvas, drawnX, drawnY, radiusDp * density, alpha, palette);
     }
 
@@ -166,7 +209,7 @@ public final class CuePreviewView extends View implements Choreographer.FrameCal
 
     private void updateAnimation() {
         boolean shouldAnimate = isAttachedToWindow() && getWindowVisibility() == VISIBLE
-                && engine.isSupported();
+                && engine.isSupported() && (dotsShown || shown > 0f);
         if (shouldAnimate && !animating) {
             animating = true;
             updateRotation();

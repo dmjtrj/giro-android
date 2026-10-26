@@ -6,6 +6,11 @@
     android:layout_height="match_parent"
     android:fillViewport="true">
 
+    <!--
+        Шестерёнка прибита к правому верхнему углу, а блок «заголовок — превью — текст»
+        стоит по вертикали чуть выше центра: распорки делят свободное место 45/55.
+        Если блок не помещается (маленький экран), распорки схлопываются и всё прокручивается.
+    -->
     <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
@@ -13,21 +18,35 @@
         android:paddingHorizontal="16dp"
         android:paddingBottom="24dp">
 
-        <!-- Крупный заголовок, как в системных настройках Pixel -->
+        <ImageButton
+            android:id="@+id/settings_button"
+            android:layout_width="48dp"
+            android:layout_height="48dp"
+            android:layout_gravity="end"
+            android:layout_marginTop="8dp"
+            android:background="?attr/actionBarItemBackground"
+            android:contentDescription="@string/settings_title"
+            android:src="@drawable/ic_settings" />
+
+        <Space
+            android:layout_width="match_parent"
+            android:layout_height="0dp"
+            android:layout_weight="45" />
+
         <TextView
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:layout_marginTop="72dp"
-            android:layout_marginBottom="28dp"
             android:paddingHorizontal="8dp"
             android:text="@string/app_name"
             android:textAppearance="?attr/textAppearanceDisplaySmall"
             android:textColor="?attr/colorOnSurface" />
 
+        <!-- Окно превью: точки и круглая кнопка включения по центру -->
         <com.google.android.material.card.MaterialCardView
             style="@style/Widget.MotionCues.Card"
             android:layout_width="match_parent"
-            android:layout_height="240dp"
+            android:layout_height="320dp"
+            android:layout_marginTop="24dp"
             app:cardCornerRadius="32dp">
 
             <com.motioncues.app.overlay.CuePreviewView
@@ -36,47 +55,27 @@
                 android:layout_height="match_parent"
                 android:contentDescription="@string/preview_description" />
 
-        </com.google.android.material.card.MaterialCardView>
+            <com.google.android.material.card.MaterialCardView
+                android:id="@+id/power_button"
+                android:layout_width="88dp"
+                android:layout_height="88dp"
+                android:layout_gravity="center"
+                android:clickable="true"
+                android:focusable="true"
+                android:hapticFeedbackEnabled="false"
+                app:cardCornerRadius="44dp"
+                app:cardElevation="0dp"
+                app:strokeWidth="0dp">
 
-        <!-- Главный переключатель-«таблетка»: подсвечивается, когда эффект включён -->
-        <com.google.android.material.card.MaterialCardView
-            android:id="@+id/main_switch_bar"
-            style="@style/Widget.MotionCues.Card"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:layout_marginTop="16dp"
-            android:clickable="true"
-            android:focusable="true"
-            android:hapticFeedbackEnabled="false"
-            app:cardCornerRadius="36dp">
+                <ImageView
+                    android:id="@+id/power_icon"
+                    android:layout_width="36dp"
+                    android:layout_height="36dp"
+                    android:layout_gravity="center"
+                    android:importantForAccessibility="no"
+                    android:src="@drawable/ic_power" />
 
-            <LinearLayout
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:gravity="center_vertical"
-                android:minHeight="72dp"
-                android:orientation="horizontal"
-                android:paddingStart="24dp"
-                android:paddingEnd="16dp">
-
-                <TextView
-                    android:id="@+id/main_switch_title"
-                    android:layout_width="0dp"
-                    android:layout_height="wrap_content"
-                    android:layout_weight="1"
-                    android:text="@string/main_switch_title"
-                    android:textAppearance="?attr/textAppearanceTitleLarge" />
-
-                <com.google.android.material.materialswitch.MaterialSwitch
-                    android:id="@+id/cues_switch"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:clickable="false"
-                    android:focusable="false"
-                    android:hapticFeedbackEnabled="false"
-                    android:importantForAccessibility="no" />
-
-            </LinearLayout>
+            </com.google.android.material.card.MaterialCardView>
 
         </com.google.android.material.card.MaterialCardView>
 
@@ -84,57 +83,17 @@
             android:id="@+id/cues_summary"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:layout_marginTop="16dp"
+            android:layout_marginTop="20dp"
+            android:lineSpacingMultiplier="1.1"
             android:paddingHorizontal="8dp"
             android:text="@string/cues_summary"
             android:textAppearance="?attr/textAppearanceBodyLarge"
             android:textColor="?attr/colorOnSurfaceVariant" />
 
-        <com.google.android.material.card.MaterialCardView
-            android:id="@+id/settings_row"
-            style="@style/Widget.MotionCues.Card"
+        <Space
             android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:layout_marginTop="28dp"
-            android:clickable="true"
-            android:focusable="true">
-
-            <LinearLayout
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:gravity="center_vertical"
-                android:minHeight="72dp"
-                android:orientation="horizontal"
-                android:paddingVertical="16dp"
-                android:paddingStart="20dp"
-                android:paddingEnd="16dp">
-
-                <LinearLayout
-                    android:layout_width="0dp"
-                    android:layout_height="wrap_content"
-                    android:layout_weight="1"
-                    android:orientation="vertical">
-
-                    <TextView
-                        style="@style/Widget.MotionCues.ItemTitle"
-                        android:text="@string/settings_title" />
-
-                    <TextView
-                        style="@style/Widget.MotionCues.ItemSummary"
-                        android:text="@string/settings_row_summary" />
-
-                </LinearLayout>
-
-                <ImageView
-                    android:layout_width="24dp"
-                    android:layout_height="24dp"
-                    android:layout_marginStart="12dp"
-                    android:importantForAccessibility="no"
-                    android:src="@drawable/ic_chevron_right" />
-
-            </LinearLayout>
-
-        </com.google.android.material.card.MaterialCardView>
+            android:layout_height="0dp"
+            android:layout_weight="55" />
 
     </LinearLayout>
 
