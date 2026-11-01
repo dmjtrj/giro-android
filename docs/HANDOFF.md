@@ -5,8 +5,8 @@
 
 ## Текущее состояние
 
-- `master` = `99958e8` (docs: minimal README with app icon), опубликован в
-  https://github.com/dmjtrj/giro-android. Других веток нет.
+- Весь код в `master` (последняя правка кода — `52c3643`, дальше только документация),
+  репозиторий https://github.com/dmjtrj/giro-android. Других веток нет.
 - Версия `0.1.0` (versionCode 1). На GitHub выложен релиз v0.1.0 с APK,
   подписанным отдельным ключом владельца.
 - Готовы функции 01–07 и 09, все влиты в master через `--no-ff`:
@@ -60,6 +60,17 @@
   (без секретов в git), исправление строки про «машины», privacy policy, versionCode 2.
 - LICENSE и скриншот в README.
 - Обсуждался экспериментальный автоматический режим (включение в поездке). Решение не принято.
+
+## Как продолжить в другом агенте
+
+1. `git clone https://github.com/dmjtrj/giro-android && cd giro-android`
+   (на этой же машине можно работать в существующей папке — `.toolchain/` уже на месте).
+2. `./scripts/setup-toolchain.sh`, затем `source ./env.sh && ./gradlew testDebugUnitTest`.
+3. Запустить агента в корне проекта. Правила он найдёт сам:
+   Codex, Cursor, Windsurf, Copilot, Amp — `AGENTS.md`; Claude Code — `CLAUDE.md`;
+   Gemini CLI — `GEMINI.md`; Aider — `.aider.conf.yml`. Все они ведут на `AGENTS.md`.
+4. Первый промпт: «Прочитай AGENTS.md и docs/HANDOFF.md, посмотри git log и скажи,
+   что понял о проекте. Ничего не меняй».
 
 ## Окружение Claude Code и как его воспроизвести
 

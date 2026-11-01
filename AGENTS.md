@@ -3,6 +3,7 @@
 Инструкции для coding-агентов (Codex, Cursor, Gemini CLI, Claude Code и др.).
 Перед работой прочитай `README.md` (что делает приложение) и `docs/HANDOFF.md`
 (текущее состояние, решения, известные проблемы, что дальше), затем `git log`.
+Для работы с телефоном — `docs/DEVICE.md`, для выпуска версии — `docs/RELEASE.md`.
 
 ## Проект
 
@@ -17,9 +18,11 @@
 
 ## Сборка и тесты
 
-JDK, Android SDK и Gradle-кэш лежат внутри проекта в `.toolchain/` (в git не попадает):
+JDK, Android SDK и Gradle-кэш лежат внутри проекта в `.toolchain/` (в git не попадает).
+На новой машине (macOS или Linux) его ставит `./scripts/setup-toolchain.sh`.
 
 ```bash
+./scripts/setup-toolchain.sh   # один раз: JDK 21, SDK platform 37, build-tools, adb
 source ./env.sh
 ./gradlew assembleDebug        # app/build/outputs/apk/debug/app-debug.apk
 ./gradlew testDebugUnitTest    # юнит-тесты JUnit 4
