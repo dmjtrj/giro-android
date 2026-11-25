@@ -10,7 +10,18 @@
   Взгляд и тело снова заодно — укачивание отступает.
 </p>
 
-<p align="center"><sub>Android 12+ · Material You</sub></p>
+<p align="center"><sub>Google Pixel · Android 12+ · Material You</sub></p>
+
+<p align="center">
+  <img src="docs/screenshots/01-cover.png" width="19%" alt="Гиро">
+  <img src="docs/screenshots/02-themes.png" width="19%" alt="Три темы">
+  <img src="docs/screenshots/03-settings.png" width="19%" alt="Как на iPhone">
+  <img src="docs/screenshots/04-above.png" width="19%" alt="Поверх всех окон">
+  <img src="docs/screenshots/05-modes.png" width="19%" alt="Два режима движения">
+</p>
+
+> Сейчас приложение поддерживается только на телефонах Google Pixel.
+> На других устройствах работа не гарантируется.
 
 <br>
 
