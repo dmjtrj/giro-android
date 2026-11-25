@@ -140,10 +140,14 @@ final class CueOverlayView extends View implements Choreographer.FrameCallback {
             return;
         }
         flow.step(frameTimeNanos);
-        if (Math.abs(flow.fieldX() - drawnX) > REDRAW_EPSILON_PX
+        int alpha = currentAlpha();
+        // Скрыты и уже нарисованы пустыми — окно на весь экран не перерисовываем,
+        // пока точки снова не начнут проявляться: физика при этом идёт дальше
+        boolean hiddenAndDrawn = alpha == 0 && drawnAlpha == 0;
+        if (!hiddenAndDrawn && (Math.abs(flow.fieldX() - drawnX) > REDRAW_EPSILON_PX
                 || Math.abs(flow.fieldY() - drawnY) > REDRAW_EPSILON_PX
-                || currentAlpha() != drawnAlpha
-                || Math.abs(flow.activity() - drawnActivity) > 0.005f) {
+                || alpha != drawnAlpha
+                || Math.abs(flow.activity() - drawnActivity) > 0.005f)) {
             invalidate();
         }
         Choreographer.getInstance().postFrameCallback(this);

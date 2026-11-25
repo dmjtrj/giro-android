@@ -16,6 +16,10 @@ import com.motioncues.app.settings.MotionMode;
  * а точки шагаются в потоке отрисовки через {@link #step(long, CueState)}.
  *
  * <p>Использование: {@link #start()} → на каждом кадре {@link #step} → {@link #stop()}.
+ *
+ * <p>Подписка на датчики и отписка — синхронные вызовы сенсорной службы, на Pixel 8
+ * до 40 мс. Поэтому они идут в потоке датчиков, а {@link #start()} и {@link #stop()}
+ * возвращаются сразу — кнопка и анимации в главном потоке не дёргаются.
  */
 public final class MotionEngine {
 
@@ -25,16 +29,26 @@ public final class MotionEngine {
     private final SensorManager sensorManager;
     private final Sensor accelerationSensor;
     private final Sensor rotationSensor;
-    private final AccelerationEstimator estimator = new AccelerationEstimator();
-    private final RotationEstimator rotationEstimator = new RotationEstimator();
     private final CueSpring spring = new CueSpring();
     /** Выбранный режим; оба оценщика получают данные всегда — переключение без скачка. */
     private volatile MotionMode mode = MotionMode.INERTIA;
+    private float sensitivity = 1f;
+    private int displayRotation;
 
-    private HandlerThread sensorThread;
+    /** Текущий запуск; {@code null}, пока движок остановлен. Только главный поток. */
+    private Session session;
     private long lastFrameNanos;
 
-    private final SensorEventListener listener = new SensorEventListener() {
+    /**
+     * Один запуск движка: свой поток датчиков и свои оценщики. Отписка старого запуска
+     * может ещё идти, когда стартует новый, — общих данных у них нет, гонок тоже.
+     */
+    private final class Session implements SensorEventListener {
+        final AccelerationEstimator estimator = new AccelerationEstimator();
+        final RotationEstimator rotationEstimator = new RotationEstimator();
+        final HandlerThread thread = new HandlerThread("MotionSensors", Process.THREAD_PRIORITY_DISPLAY);
+        Handler handler;
+
         @Override
         public void onSensorChanged(SensorEvent event) {
             int type = event.sensor.getType();
@@ -49,7 +63,7 @@ public final class MotionEngine {
         @Override
         public void onAccuracyChanged(Sensor sensor, int accuracy) {
         }
-    };
+    }
 
     public MotionEngine(Context context) {
         sensorManager = context.getSystemService(SensorManager.class);
@@ -64,43 +78,60 @@ public final class MotionEngine {
     }
 
     public boolean isRunning() {
-        return sensorThread != null;
+        return session != null;
     }
 
     public void start() {
         if (isRunning() || !isSupported()) {
             return;
         }
-        estimator.reset();
-        rotationEstimator.reset();
         spring.reset();
         lastFrameNanos = 0L;
 
-        sensorThread = new HandlerThread("MotionSensors", Process.THREAD_PRIORITY_DISPLAY);
-        sensorThread.start();
-        Handler handler = new Handler(sensorThread.getLooper());
-        sensorManager.registerListener(listener, rotationSensor, SAMPLING_PERIOD_US, handler);
-        sensorManager.registerListener(listener, accelerationSensor, SAMPLING_PERIOD_US, handler);
+        Session s = new Session();
+        s.estimator.setSensitivity(sensitivity);
+        s.rotationEstimator.setSensitivity(sensitivity);
+        s.estimator.setDisplayRotation(displayRotation);
+        s.rotationEstimator.setDisplayRotation(displayRotation);
+        s.thread.start();
+        s.handler = new Handler(s.thread.getLooper());
+        s.handler.post(() -> {
+            sensorManager.registerListener(s, rotationSensor, SAMPLING_PERIOD_US, s.handler);
+            sensorManager.registerListener(s, accelerationSensor, SAMPLING_PERIOD_US, s.handler);
+        });
+        session = s;
     }
 
     public void stop() {
-        if (!isRunning()) {
+        Session s = session;
+        if (s == null) {
             return;
         }
-        sensorManager.unregisterListener(listener);
-        sensorThread.quitSafely();
-        sensorThread = null;
+        session = null;
+        // Отписка в том же потоке, после подписки; затем поток завершается сам
+        s.handler.post(() -> {
+            sensorManager.unregisterListener(s);
+            s.thread.quitSafely();
+        });
     }
 
     /** Поворот дисплея ({@code Surface.ROTATION_*}) — вызывать при смене ориентации. */
     public void setDisplayRotation(int rotation) {
-        estimator.setDisplayRotation(rotation);
-        rotationEstimator.setDisplayRotation(rotation);
+        displayRotation = rotation;
+        Session s = session;
+        if (s != null) {
+            s.estimator.setDisplayRotation(rotation);
+            s.rotationEstimator.setDisplayRotation(rotation);
+        }
     }
 
     public void setSensitivity(float sensitivity) {
-        estimator.setSensitivity(sensitivity);
-        rotationEstimator.setSensitivity(sensitivity);
+        this.sensitivity = sensitivity;
+        Session s = session;
+        if (s != null) {
+            s.estimator.setSensitivity(sensitivity);
+            s.rotationEstimator.setSensitivity(sensitivity);
+        }
     }
 
     /** «Инерция» (как в iOS) или «Гироскоп» (как в большинстве приложений для Android). */
@@ -116,11 +147,18 @@ public final class MotionEngine {
     public void step(long frameTimeNanos, CueState out) {
         float dt = lastFrameNanos == 0L ? 0f : (frameTimeNanos - lastFrameNanos) * 1e-9f;
         lastFrameNanos = frameTimeNanos;
-        if (mode == MotionMode.GYROSCOPE) {
-            spring.step(dt, rotationEstimator.targetX(), rotationEstimator.targetY(), out);
-        } else {
-            spring.step(dt, estimator.targetX(), estimator.targetY(), out);
+        Session s = session;
+        float targetX = 0f, targetY = 0f;
+        if (s != null) {
+            if (mode == MotionMode.GYROSCOPE) {
+                targetX = s.rotationEstimator.targetX();
+                targetY = s.rotationEstimator.targetY();
+            } else {
+                targetX = s.estimator.targetX();
+                targetY = s.estimator.targetY();
+            }
         }
+        spring.step(dt, targetX, targetY, out);
     }
 
     private Sensor firstAvailable(int... types) {
