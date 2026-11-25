@@ -13,7 +13,6 @@ import android.view.Display;
 import android.view.View;
 
 import com.motioncues.app.motion.MotionEngine;
-import com.motioncues.app.motion.Sensitivity;
 import com.motioncues.app.settings.AppSettings;
 import com.motioncues.app.settings.CueProfile;
 import com.motioncues.app.settings.ThemeController;
@@ -188,7 +187,7 @@ public final class CuePreviewView extends View implements Choreographer.FrameCal
         palette = CuePalette.resolve(getContext(), theme, profile.dotColor);
         radiusDp = DotStyle.radiusDp(profile.dotSize);
         opacityLevel = profile.dotOpacity;
-        engine.setSensitivity(Sensitivity.factor(profile.sensitivity));
+        engine.setSensitivity(profile.sensitivityFactor());
         // Превью ведёт себя по выбранному режиму — ровно как эффект
         engine.setMode(profile.motionMode);
         if (profile.dotCount != countLevel) {

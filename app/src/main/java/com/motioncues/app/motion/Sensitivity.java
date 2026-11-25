@@ -11,6 +11,11 @@ import com.motioncues.app.settings.AppSettings;
 public final class Sensitivity {
 
     private static final float[] FACTOR = {0.6f, 0.8f, 1f, 1.3f, 1.7f};
+    /**
+     * Режим «Как на iPhone»: чуть отзывчивее среднего уровня — на iPhone 15 точки
+     * заметно живее отвечают на движение, но до уровня 4 не дотягивают.
+     */
+    public static final float IPHONE_FACTOR = 1.15f;
 
     private Sensitivity() {
     }

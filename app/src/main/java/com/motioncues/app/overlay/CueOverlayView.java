@@ -10,7 +10,6 @@ import android.view.Display;
 import android.view.View;
 
 import com.motioncues.app.motion.MotionEngine;
-import com.motioncues.app.motion.Sensitivity;
 import com.motioncues.app.settings.AppSettings;
 import com.motioncues.app.settings.CueProfile;
 import com.motioncues.app.settings.ThemeController;
@@ -84,7 +83,7 @@ final class CueOverlayView extends View implements Choreographer.FrameCallback {
         palette = CuePalette.resolve(getContext(), theme, profile.dotColor);
         radiusDp = DotStyle.radiusDp(profile.dotSize);
         opacityLevel = profile.dotOpacity;
-        engine.setSensitivity(Sensitivity.factor(profile.sensitivity));
+        engine.setSensitivity(profile.sensitivityFactor());
         engine.setMode(profile.motionMode);
         if (profile.dotCount != countLevel) {
             countLevel = profile.dotCount;
