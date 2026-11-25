@@ -1,12 +1,14 @@
 package com.motioncues.app.settings;
 
+import com.motioncues.app.motion.Sensitivity;
+
 /**
  * Итоговые параметры точек и движения, которые реально применяются к эффекту и превью.
  *
  * <p>В обычном режиме — то, что выбрал пользователь. В режиме «Как на iPhone» настройки
  * точек и движения заменяются набором, максимально близким к Vehicle Motion Cues в iOS:
  * одноцветные точки противоположного теме цвета, средний размер, плотность как на iPhone,
- * режим «Инерция» и средняя чувствительность.
+ * режим «Инерция» и чувствительность чуть выше средней.
  */
 public final class CueProfile {
 
@@ -50,5 +52,10 @@ public final class CueProfile {
         // Белые и чёрные точки всегда полностью непрозрачные — ползунок непрозрачности не нужен
         return new CueProfile(true, night ? DotColor.WHITE : DotColor.BLACK, IPHONE_DOT_SIZE,
                 AppSettings.MAX_LEVEL, IPHONE_DOT_COUNT, MotionMode.INERTIA, AppSettings.DEFAULT_LEVEL);
+    }
+
+    /** Множитель реакции на движение: в режиме «Как на iPhone» — свой, иначе по ползунку. */
+    public float sensitivityFactor() {
+        return iphone ? Sensitivity.IPHONE_FACTOR : Sensitivity.factor(sensitivity);
     }
 }

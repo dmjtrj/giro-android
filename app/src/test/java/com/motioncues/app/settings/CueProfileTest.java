@@ -3,6 +3,8 @@ package com.motioncues.app.settings;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
 
+import com.motioncues.app.motion.Sensitivity;
+
 import org.junit.Test;
 
 public class CueProfileTest {
@@ -21,5 +23,12 @@ public class CueProfileTest {
         assertEquals(AppSettings.DEFAULT_LEVEL, p.sensitivity);
         assertEquals(AppSettings.MIN_COUNT_LEVEL, p.dotCount);
         assertEquals(AppSettings.DEFAULT_LEVEL, p.dotSize);
+    }
+
+    @Test
+    public void iphone_isSlightlyMoreResponsiveThanDefault() {
+        float iphone = CueProfile.iphone(true).sensitivityFactor();
+        assertTrue(iphone > Sensitivity.factor(AppSettings.DEFAULT_LEVEL));
+        assertTrue(iphone < Sensitivity.factor(AppSettings.DEFAULT_LEVEL + 1));
     }
 }
