@@ -1,0 +1,77 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_name">Giro</string>
+
+    <!-- Главный экран -->
+    <string name="power_turn_on">Turn on motion cues</string>
+    <string name="power_turn_off">Turn off motion cues</string>
+    <string name="cues_summary">Dots along the edges of the screen follow the motion on the go. Your eyes and body agree again, and motion sickness fades.</string>
+    <string name="sensors_unsupported">This device lacks the required motion sensors</string>
+    <string name="preview_description">Dots preview</string>
+    <string name="settings_title">Settings</string>
+
+    <!-- Онбординг разрешения -->
+    <string name="overlay_dialog_title">Display over other apps</string>
+    <string name="overlay_dialog_message">The dots are drawn over other apps, which requires a permission.\n\nIn the list that opens, find “Giro” and turn on “Allow display over other apps”. Then come back here and the effect will turn on by itself.</string>
+    <string name="overlay_dialog_open">Open settings</string>
+    <string name="overlay_dialog_later">Not now</string>
+
+    <!-- Экран настроек -->
+    <string name="section_dots">Dots</string>
+    <string name="section_motion">Motion</string>
+    <string name="section_appearance">Appearance</string>
+    <string name="section_feedback">Feedback</string>
+
+    <string name="dot_color_title">Color</string>
+    <string name="dot_color_auto">Auto</string>
+    <string name="dot_color_white">White</string>
+    <string name="dot_color_black">Black</string>
+    <string name="dot_color_monet">Monet</string>
+    <string name="dot_size_title">Size</string>
+    <string name="dot_count_title">Count</string>
+    <string name="iphone_mode_title">Like on iPhone</string>
+    <string name="iphone_mode_summary">Dots and motion as close as possible to Vehicle Motion Cues in iOS: white on the dark theme, black on the light one. Other dot and motion settings are unavailable.</string>
+    <string name="dot_opacity_title">Opacity</string>
+
+    <string name="motion_mode_title">Mode</string>
+    <string name="motion_mode_inertia">Inertia</string>
+    <string name="motion_mode_gyroscope">Gyroscope</string>
+    <string name="motion_mode_inertia_summary">Like in iOS: the dots respond to speeding up, braking and turns on the go, then smoothly return. Turning the phone in your hand doesn’t interfere.</string>
+    <string name="motion_mode_gyroscope_summary">Like most Android apps: the dots are anchored to the world around you and respond to any turn or tilt of the phone.</string>
+    <string name="sensitivity_title">Sensitivity</string>
+    <string name="sensitivity_summary">How strongly the dots respond to motion, in either mode</string>
+
+    <string name="section_display">Display</string>
+    <string name="above_system_title">Over the shade and system windows</string>
+    <string name="above_system_summary_off">Dots appear over apps, but under the notification shade and the keyboard</string>
+    <string name="above_system_summary_on">Dots appear over everything, white and black only, without transparency</string>
+    <string name="above_system_summary_needs_service">Turn on the “Giro” service in Accessibility settings</string>
+    <string name="above_system_dialog_title">Over the shade and system windows</string>
+    <string name="above_system_dialog_message">Only accessibility services, such as the screen magnifier, can draw over the notification shade, the keyboard and system windows.
+
+Open Accessibility settings, choose “Giro” and turn the service on. It reads nothing from the screen and only shows the dots.
+
+If the app was not installed from Google Play, Android may first ask you to allow restricted settings: Settings → Apps → Giro → ⋮ → “Allow restricted settings”.</string>
+    <string name="above_system_dialog_open">Open settings</string>
+    <string name="accessibility_description">Giro shows motion cue dots over the notification shade, the keyboard and system windows. The service does not read screen content and does not collect data.</string>
+
+    <string name="theme_title">Theme</string>
+    <string name="theme_light">Light</string>
+    <string name="theme_dark">Dark</string>
+    <string name="theme_monet">Monet</string>
+
+    <string name="haptics_switch">Haptic feedback</string>
+    <string name="haptics_summary">Vibration feedback for switches and sliders</string>
+
+    <string name="navigate_up">Back</string>
+
+    <!-- Плитка в быстрых настройках -->
+    <string name="tile_on">On</string>
+    <string name="tile_off">Off</string>
+
+    <!-- Уведомление -->
+    <string name="notification_channel">Giro</string>
+    <string name="notification_title">Giro is running</string>
+    <string name="notification_text">Dots follow the motion on the go</string>
+    <string name="action_turn_off">Turn off</string>
+</resources>

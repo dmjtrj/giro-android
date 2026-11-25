@@ -9,17 +9,7 @@
 В `app/build.gradle` увеличить `versionCode` (на 1) и `versionName` (например `0.2.0`).
 Закоммитить в ветке функции, влить в master.
 
-## 2. Собрать
-
-```bash
-source ./env.sh
-./gradlew testDebugUnitTest assembleRelease
-```
-
-Получится `app/build/outputs/apk/release/app-release.apk`. Пока `signingConfig` в release —
-debug-ключ, поэтому его нужно переподписать своим ключом.
-
-## 3. Подписать
+## 2. Ключ подписи
 
 Ключ создаётся один раз (если его ещё нет):
 
@@ -29,15 +19,25 @@ keytool -genkeypair -v -keystore ~/keys/giro-release.jks -alias giro \
   -keyalg RSA -keysize 4096 -validity 10000
 ```
 
-Подпись и проверка:
+Gradle ищет ключ в `~/keys/giro-release.jks` с алиасом `giro`. Другой путь или алиас —
+`-Pgiro.keystore=...` и `-Pgiro.keyAlias=...`. Пароль берётся только из переменной окружения
+`GIRO_STORE_PASSWORD` (пароль ключа — `GIRO_KEY_PASSWORD`, если он отличается).
+Если ключа или пароля нет, release подписывается debug-ключом.
+
+## 3. Собрать и проверить
 
 ```bash
+source ./env.sh
+read -s GIRO_STORE_PASSWORD && export GIRO_STORE_PASSWORD
+./gradlew testDebugUnitTest assembleRelease
+unset GIRO_STORE_PASSWORD
+
 export PATH="$ANDROID_HOME/build-tools/37.0.0:$PATH"
-apksigner sign --ks ~/keys/giro-release.jks --ks-key-alias giro \
-  --out Giro-0.2.0.apk app/build/outputs/apk/release/app-release.apk
-apksigner verify --print-certs Giro-0.2.0.apk
+apksigner verify --print-certs app/build/outputs/apk/release/app-release.apk
+cp app/build/outputs/apk/release/app-release.apk Giro-0.2.0.apk
 ```
 
+В выводе `apksigner` должен быть ваш сертификат, а не `CN=Android Debug`.
 Пароль от ключа вводит владелец сам; агенту его не передают.
 
 ## 4. Опубликовать

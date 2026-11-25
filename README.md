@@ -54,4 +54,6 @@ app/src/main/java/com/motioncues/app/
 
 <br>
 
+<p align="center"><sub><a href="docs/PRIVACY.md">Политика конфиденциальности</a></sub></p>
+
 <p align="center"><sub><code>master</code> — стабильная ветка, каждая функция — отдельная <code>feature/NN-alias</code></sub></p>

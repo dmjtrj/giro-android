@@ -38,7 +38,7 @@
     <string name="motion_mode_title">Режим</string>
     <string name="motion_mode_inertia">Инерция</string>
     <string name="motion_mode_gyroscope">Гироскоп</string>
-    <string name="motion_mode_inertia_summary">Как в iOS: точки отвечают на разгон, торможение и повороты машины и плавно возвращаются. Вращение телефона в руке не мешает.</string>
+    <string name="motion_mode_inertia_summary">Как в iOS: точки отвечают на разгон, торможение и повороты в пути и плавно возвращаются. Вращение телефона в руке не мешает.</string>
     <string name="motion_mode_gyroscope_summary">Как в большинстве приложений для Android: точки привязаны к миру вокруг и живо отвечают на любой поворот и наклон телефона.</string>
     <string name="sensitivity_title">Чувствительность</string>
     <string name="sensitivity_summary">Насколько сильно точки отвечают на движение — в любом режиме</string>
