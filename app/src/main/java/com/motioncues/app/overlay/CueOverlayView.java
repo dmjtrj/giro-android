@@ -17,11 +17,11 @@ import com.motioncues.app.settings.ThemeController;
 import com.motioncues.app.settings.ThemeMode;
 
 /**
- * Точки-сигналы по левому и правому краю экрана, почти на всю высоту.
+ * Точки-сигналы по левому и правому краю экрана, на всю высоту.
  *
- * <p>Поле точек смещается против ускорения машины и плавно возвращается, когда ускорение
- * заканчивается. При резком движении точки заходят за границу окна и уменьшаются,
- * а с другой стороны вырастают новые. Когда поле стоит, кадр не перерисовывается.
+ * <p>Поле точек смещается против ускорения и плавно возвращается, когда ускорение
+ * заканчивается. В движении изнутри вырастают новые колонки точек, а крайние уходят
+ * за грань экрана. Когда поле стоит, кадр не перерисовывается.
  *
  * <p>Все параметры берутся из итогового профиля настроек ({@link CueProfile}) —
  * в том числе в режиме «Как на iPhone».
@@ -34,16 +34,12 @@ final class CueOverlayView extends View implements Choreographer.FrameCallback {
     /** Порог, ниже которого кадр считается неизменным, px. */
     private static final float REDRAW_EPSILON_PX = 0.05f;
     /**
-     * Смещение поля при максимальном сигнале движения, dp. Больше полушага решётки —
-     * при резком движении точки успевают зайти за границу окна и «прорасти» с другой стороны.
+     * Смещение поля при максимальном сигнале движения, dp. Почти шаг колонок — при резком
+     * повороте крайние точки уходят за грань экрана, а изнутри подходит следующая колонка.
      */
     private static final float TRAVEL_DP = 40f;
 
     private static final float RING_WIDTH_DP = 1.5f;
-    private static final float EDGE_PAD_DP = 12f;
-    /** Отступ окон сверху и снизу — точки идут почти на всю высоту, как на iPhone. */
-    private static final float VERTICAL_PAD_DP = 8f;
-    private static final float COLUMN_GAP_DP = 22f;
 
     private final MotionEngine engine;
     private final AppSettings settings;
@@ -64,6 +60,7 @@ final class CueOverlayView extends View implements Choreographer.FrameCallback {
 
     private float drawnX = Float.NaN, drawnY = Float.NaN;
     private int drawnAlpha = -1;
+    private float drawnActivity = -1f;
 
     /**
      * @param windowAlpha прозрачность окна-оверлея: учитываем, чтобы итоговая
@@ -145,7 +142,8 @@ final class CueOverlayView extends View implements Choreographer.FrameCallback {
         flow.step(frameTimeNanos);
         if (Math.abs(flow.fieldX() - drawnX) > REDRAW_EPSILON_PX
                 || Math.abs(flow.fieldY() - drawnY) > REDRAW_EPSILON_PX
-                || currentAlpha() != drawnAlpha) {
+                || currentAlpha() != drawnAlpha
+                || Math.abs(flow.activity() - drawnActivity) > 0.005f) {
             invalidate();
         }
         Choreographer.getInstance().postFrameCallback(this);
@@ -156,8 +154,10 @@ final class CueOverlayView extends View implements Choreographer.FrameCallback {
         drawnX = flow.fieldX();
         drawnY = flow.fieldY();
         drawnAlpha = currentAlpha();
+        drawnActivity = flow.activity();
         // Скрыты — запомнили состояние, чтобы не перерисовываться зря, и ничего не рисуем
-        renderer.draw(canvas, drawnX, drawnY, radiusDp * density, drawnAlpha, palette);
+        float reach = DotDensity.reachDp(countLevel, drawnActivity) * density;
+        renderer.draw(canvas, drawnX, drawnY, reach, radiusDp * density, drawnAlpha, palette);
     }
 
     @Override
@@ -177,12 +177,11 @@ final class CueOverlayView extends View implements Choreographer.FrameCallback {
         if (width == 0 || height == 0) {
             return;
         }
-        float gap = COLUMN_GAP_DP * density;
-        float rowStep = DotDensity.rowStepDp(countLevel) * density;
-        int rows = Math.max(2, (int) ((height - 2f * VERTICAL_PAD_DP * density) / rowStep));
-        renderer.layout(width, height, new DotField(gap, rowStep, DotDensity.columns(countLevel), rows),
-                EDGE_PAD_DP * density);
-        flow.configure(TRAVEL_DP * density, gap * 2f, rowStep);
+        DotField field = new DotField(DotDensity.COLUMN_GAP_DP * density,
+                DotDensity.rowStepDp(countLevel) * density, width, height,
+                DotDensity.EDGE_INSET_DP * density, DotDensity.FULL_REACH_DP * density);
+        renderer.layout(field);
+        flow.configure(TRAVEL_DP * density, field.periodX(), field.periodY());
         drawnX = Float.NaN;
         invalidate();
     }

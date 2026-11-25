@@ -1,21 +1,17 @@
 package com.motioncues.app.overlay;
 
 /**
- * Текущее поле точек, как в Vehicle Motion Cues в iOS.
+ * Текущее поле точек, как в Vehicle Motion Cues в iOS (снято по записи экрана iPhone 15).
  *
- * <p>Бесконечная решётка точек в шахматном порядке течёт вместе со смещением
- * {@code (ox, oy)}. Каждая сторона экрана — окно в эту решётку. Точка, подходящая
- * к границе окна, плавно уменьшается до нуля, а с противоположной стороны в это
- * же время вырастает новая — ровно настолько, насколько уменьшилась первая.
- * Поэтому при долгом разгоне или повороте точки непрерывно «текут», а не упираются в край.
+ * <p>Одна решётка в шахматном порядке на всю ширину экрана течёт вместе со смещением
+ * {@code (ox, oy)}. Видны только точки у боковых краёв: полного размера у грани и всё
+ * мельче вглубь, до нуля на расстоянии {@code reach}. В покое {@code reach} маленький —
+ * у каждого края одна колонка в ~24 dp от грани. В движении он растёт, и изнутри
+ * вырастают ещё колонки. Решётка сдвигается целиком, поэтому левый и правый края
+ * выглядят по-разному, а крайние точки уходят за грань экрана и обрезаются ею.
  *
- * <p>Зона уменьшения — один шаг решётки, а окно — целое число шагов. Тогда размеры
- * уходящей и входящей точек в сумме всегда дают одну полную точку, и общая «масса»
- * точек в окне не меняется при любом движении.
- *
- * <p>Раскладка симметрична относительно центра окна: в покое по центру стоит полная
- * колонка (и полный ряд), к краям точки мягко уменьшаются. При окне в 2 колонки это
- * одна полная колонка точно по центру, при окне в 3 — полная в середине и половинки по краям.
+ * <p>Шаг колонок подгоняется так, чтобы в покое крайние колонки стояли симметрично
+ * и в одних рядах, как на iPhone.
  *
  * <p>Чистая Java без зависимостей от Android; без аллокаций при расчёте кадра.
  */
@@ -23,37 +19,34 @@ final class DotField {
 
     final float columnGap;
     final float rowStep;
-    final float windowWidth;
-    final float windowHeight;
-    private final int columns;
-    private final int rows;
+    final float width;
+    final float height;
+    private final float inset;
+    private final float fullReach;
 
     /**
-     * @param columnGap расстояние между колонками, px
-     * @param rowStep   расстояние между рядами в колонке, px
-     * @param columns   ширина окна в колонках
-     * @param rows      высота окна в рядах
+     * @param targetGap желаемый шаг колонок, px
+     * @param rowStep   шаг рядов в колонке, px; соседние колонки сдвинуты на полряда
+     * @param width     ширина экрана, px
+     * @param height    высота экрана, px
+     * @param inset     где в покое стоят крайние колонки, px от грани
+     * @param fullReach до какого расстояния от грани точки полного размера, px
      */
-    DotField(float columnGap, float rowStep, int columns, int rows) {
-        this.columnGap = columnGap;
+    DotField(float targetGap, float rowStep, float width, float height, float inset, float fullReach) {
         this.rowStep = rowStep;
-        this.columns = columns;
-        this.rows = rows;
-        windowWidth = columns * columnGap;
-        windowHeight = rows * rowStep;
+        this.width = width;
+        this.height = height;
+        this.inset = inset;
+        this.fullReach = fullReach;
+        // Чётное число шагов между крайними колонками — в покое они в одних рядах
+        float span = Math.max(targetGap, width - 2f * inset);
+        int steps = Math.max(2, 2 * Math.round(span / targetGap / 2f));
+        columnGap = span / steps;
     }
 
-    /** Сколько точек максимум может оказаться в окне — размер буферов. */
+    /** Сколько точек максимум может оказаться на экране — размер буферов. */
     int capacity() {
-        return (columns + 4) * (rows + 4);
-    }
-
-    /**
-     * Общая «масса» точек (сумма размеров) — одна и та же при любом смещении поля.
-     * Две крайние частичные колонки вместе дают одну полную, так же и ряды.
-     */
-    float mass() {
-        return (columns - 1) * (rows - 1);
+        return ((int) (width / columnGap) + 4) * ((int) (height / rowStep) + 4);
     }
 
     /** Период решётки по X: две колонки (шахматный порядок повторяется через одну). */
@@ -66,46 +59,43 @@ final class DotField {
     }
 
     /**
-     * Считает точки, видимые в окне, для смещения поля {@code (ox, oy)}.
-     * Координаты — относительно левого верхнего угла окна.
+     * Считает видимые точки для смещения поля {@code (ox, oy)}. Координаты — экранные;
+     * точки у грани могут частично выходить за экран, их обрезает холст.
      *
-     * @param scale размер точки от 0 (у границы) до 1
+     * @param reach до какого расстояния от грани видны точки, px
+     * @param scale размер точки от 0 до 1
      * @return сколько точек записано
      */
-    int compute(float ox, float oy, float[] x, float[] y, float[] scale) {
+    int compute(float ox, float oy, float reach, float margin, float[] x, float[] y, float[] scale) {
         float phaseX = wrap(ox, periodX());
         float phaseY = wrap(oy, periodY());
-        // Зона уменьшения — ровно шаг: уходящая и входящая точки дополняют друг друга
-        float fadeX = columnGap;
-        float fadeY = rowStep;
+        float originX = inset + phaseX;
+        // В покое ряд чётных колонок проходит через середину экрана
+        float originY = height / 2f + phaseY;
+        int firstColumn = (int) Math.floor((-margin - originX) / columnGap);
+        int lastColumn = (int) Math.ceil((width + margin - originX) / columnGap);
+        int firstRow = (int) Math.floor((-margin - originY) / rowStep) - 1;
+        int lastRow = (int) Math.ceil((height + margin - originY) / rowStep);
         int count = 0;
-        // Отсчёт от центра окна: в покое колонка и ряд по центру — полного размера.
-        // Идём с запасом в чётное число шагов влево/вверх (чётное — чтобы центральная
-        // колонка не была сдвинута на полряда), фаза сдвигает поле в пределах периода.
-        int marginX = 2 * ((int) Math.ceil(windowWidth / columnGap / 2f) + 1);
-        int marginY = (int) Math.ceil(windowHeight / rowStep / 2f) + 2;
-        float baseX = windowWidth / 2f - marginX * columnGap + phaseX;
-        float baseY = windowHeight / 2f - marginY * rowStep + phaseY;
-        for (int c = 0; c <= 2 * marginX + 2; c++) {
-            float u = baseX + c * columnGap;
-            if (u < 0f || u > windowWidth) {
+        for (int c = firstColumn; c <= lastColumn; c++) {
+            float u = originX + c * columnGap;
+            if (u < -margin || u > width + margin) {
                 continue;
             }
-            float sx = edgeScale(Math.min(u, windowWidth - u), fadeX);
+            float sx = reachScale(Math.min(u, width - u), fullReach, reach);
+            if (sx <= 0f) {
+                continue;
+            }
             // Нечётные колонки сдвинуты на полряда — шахматный порядок
             float stagger = (c & 1) == 0 ? 0f : rowStep / 2f;
-            for (int r = 0; r <= 2 * marginY + 2; r++) {
-                float v = baseY + r * rowStep + stagger;
-                if (v < 0f || v > windowHeight) {
-                    continue;
-                }
-                float s = sx * edgeScale(Math.min(v, windowHeight - v), fadeY);
-                if (s <= 0f) {
+            for (int r = firstRow; r <= lastRow; r++) {
+                float v = originY + r * rowStep + stagger;
+                if (v < -margin || v > height + margin) {
                     continue;
                 }
                 x[count] = u;
                 y[count] = v;
-                scale[count] = s;
+                scale[count] = sx;
                 count++;
             }
         }
@@ -113,9 +103,17 @@ final class DotField {
     }
 
     /**
-     * Плавное уменьшение у границы: 0 на границе, 1 через шаг и дальше.
-     * Симметрично: {@code edgeScale(d) + edgeScale(fade - d) == 1}.
+     * Размер точки по расстоянию от грани: 1 до {@code full}, плавно до 0 к {@code reach}.
+     * За гранью (отрицательное расстояние) — тоже 1: точку обрезает край экрана.
      */
+    static float reachScale(float distance, float full, float reach) {
+        if (reach <= full) {
+            return distance <= reach ? 1f : 0f;
+        }
+        return edgeScale(reach - distance, reach - full);
+    }
+
+    /** Плавный переход: 0 при {@code distance <= 0}, 1 при {@code distance >= fade}. */
     static float edgeScale(float distance, float fade) {
         float t = Math.max(0f, Math.min(1f, distance / fade));
         return t * t * (3f - 2f * t);
