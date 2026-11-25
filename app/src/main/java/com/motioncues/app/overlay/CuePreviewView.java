@@ -29,15 +29,12 @@ import com.motioncues.app.settings.ThemeMode;
  */
 public final class CuePreviewView extends View implements Choreographer.FrameCallback {
 
-    private static final float EDGE_PAD_DP = 16f;
-    private static final float COLUMN_GAP_DP = 22f;
     /**
-     * Превью — миниатюра экрана: ряды чаще, чтобы в небольшой карточке поместилось 4–5 рядов.
-     * Масштаб один для всех уровней количества — разница между уровнями видна как в эффекте.
-     * Шаг не меньше ~29 dp: даже самые крупные точки (Ø 15 dp) не наползают друг на друга.
+     * Превью — миниатюра экрана: по ширине карточка как экран, а ряды чаще, чтобы в невысокой
+     * карточке поместилось 3–5 рядов. Масштаб один для всех уровней количества — разница
+     * между уровнями видна как в эффекте. Шаг не меньше 30 dp: крупные точки не наползают.
      */
-    private static final float ROW_SCALE = 0.3f;
-    private static final float VERTICAL_PAD_DP = 12f;
+    private static final float ROW_SCALE = 0.25f;
     private static final float RING_WIDTH_DP = 1.5f;
     /** Смещение в том же масштабе, что и ряды: относительно решётки — как в эффекте (там 40 dp). */
     private static final float TRAVEL_DP = 40f * ROW_SCALE;
@@ -150,12 +147,11 @@ public final class CuePreviewView extends View implements Choreographer.FrameCal
         if (width == 0 || height == 0) {
             return;
         }
-        float gap = COLUMN_GAP_DP * density;
-        float rowStep = DotDensity.rowStepDp(countLevel) * ROW_SCALE * density;
-        int rows = Math.max(2, (int) ((height - 2f * VERTICAL_PAD_DP * density) / rowStep));
-        renderer.layout(width, height, new DotField(gap, rowStep, DotDensity.columns(countLevel), rows),
-                EDGE_PAD_DP * density);
-        flow.configure(TRAVEL_DP * density, gap * 2f, rowStep);
+        DotField field = new DotField(DotDensity.COLUMN_GAP_DP * density,
+                DotDensity.rowStepDp(countLevel) * ROW_SCALE * density, width, height,
+                DotDensity.EDGE_INSET_DP * density, DotDensity.FULL_REACH_DP * density);
+        renderer.layout(field);
+        flow.configure(TRAVEL_DP * density, field.periodX(), field.periodY());
         drawnX = Float.NaN;
         invalidate();
     }
@@ -181,7 +177,8 @@ public final class CuePreviewView extends View implements Choreographer.FrameCal
         drawnActivity = flow.activity();
         // Та же формула видимости, что у эффекта
         int alpha = Math.round(Math.min(1f, palette.opacity(opacityLevel, drawnActivity)) * shown * 255f);
-        renderer.draw(canvas, drawnX, drawnY, radiusDp * density, alpha, palette);
+        float reach = DotDensity.reachDp(countLevel, drawnActivity) * density;
+        renderer.draw(canvas, drawnX, drawnY, reach, radiusDp * density, alpha, palette);
     }
 
     /** Тот же итоговый профиль, что у эффекта, — включая режим «Как на iPhone». */

@@ -3,25 +3,45 @@ package com.motioncues.app.overlay;
 import com.motioncues.app.settings.AppSettings;
 
 /**
- * Уровни ползунка «Количество точек» → ширина окна у каждого края (в колонках)
- * и шаг рядов. Окно в 2 колонки — одна полная колонка по центру, как на iPhone;
- * в 3 колонки — полная колонка и половинки по краям, которые перетекают при поворотах.
+ * Геометрия поля точек и уровни ползунка «Количество точек».
+ *
+ * <p>Числа сняты с записи экрана iPhone 15 (в pt, на Android берём столько же dp):
+ * шаг колонок ~43, шаг рядов в колонке ~234, в покое у каждого края одна колонка
+ * в ~24 от грани. В движении видимая полоса растёт до ~170 от грани.
+ * Уровень 1 — как на iPhone; дальше ряды чаще, а в покое видна и вторая колонка.
  */
 public final class DotDensity {
 
-    private static final int[] COLUMNS = {2, 2, 3, 3};
-    /** Шаг рядов на экране по уровням, dp. Уровень 1 — плотность как на iPhone. */
-    private static final float[] ROW_STEP_DP = {120f, 90f, 120f, 96f};
+    /** Шаг колонок, dp. */
+    public static final float COLUMN_GAP_DP = 43f;
+    /** Где в покое стоят крайние колонки, dp от грани. */
+    public static final float EDGE_INSET_DP = 24f;
+    /** До какого расстояния от грани точки полного размера, dp. */
+    public static final float FULL_REACH_DP = 30f;
+    /** Видимая полоса при полном движении, dp от грани. */
+    public static final float MOVING_REACH_DP = 170f;
+
+    /** Шаг рядов в колонке по уровням, dp. */
+    private static final float[] ROW_STEP_DP = {234f, 180f, 150f, 120f};
+    /** Видимая полоса в покое по уровням, dp: 50 — одна колонка, 95 — две. */
+    private static final float[] REST_REACH_DP = {50f, 50f, 95f, 95f};
 
     private DotDensity() {
     }
 
-    public static int columns(int level) {
-        return COLUMNS[index(level)];
-    }
-
     public static float rowStepDp(int level) {
         return ROW_STEP_DP[index(level)];
+    }
+
+    /**
+     * Видимая полоса точек от грани, dp.
+     *
+     * @param activity сила движения 0..1: в покое полоса узкая, в движении изнутри вырастают колонки
+     */
+    public static float reachDp(int level, float activity) {
+        float rest = REST_REACH_DP[index(level)];
+        float a = Math.max(0f, Math.min(1f, activity));
+        return rest + (MOVING_REACH_DP - rest) * a;
     }
 
     private static int index(int level) {

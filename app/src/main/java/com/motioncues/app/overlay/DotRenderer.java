@@ -4,7 +4,7 @@ import android.graphics.Canvas;
 import android.graphics.Paint;
 
 /**
- * Рисует текущее поле точек в двух окнах — у левого и правого края.
+ * Рисует текущее поле точек у левого и правого края экрана.
  * Общий для оверлея и превью. Буферы выделяются один раз — в кадре аллокаций нет.
  */
 final class DotRenderer {
@@ -12,29 +12,26 @@ final class DotRenderer {
     private final Paint fillPaint = new Paint(Paint.ANTI_ALIAS_FLAG);
     private final Paint ringPaint = new Paint(Paint.ANTI_ALIAS_FLAG);
     private final float ringWidth;
+    /**
+     * Точки мельче не рисуем (~1 dp при обводке 1.5 dp): от шума датчиков в покое внутренняя
+     * колонка иначе проступает пылью, а на iPhone самые мелкие видимые точки ~2.4 pt.
+     */
+    private final float minRadius;
 
     private DotField field;
     private float[] xs = new float[0];
     private float[] ys = new float[0];
     private float[] scales = new float[0];
 
-    private float leftWindowX;
-    private float rightWindowX;
-    private float windowY;
-
     DotRenderer(float ringWidthPx) {
         ringWidth = ringWidthPx;
+        minRadius = ringWidthPx * 2f / 3f;
         fillPaint.setStyle(Paint.Style.FILL);
         ringPaint.setStyle(Paint.Style.STROKE);
         ringPaint.setStrokeWidth(ringWidthPx);
     }
 
-    /**
-     * Раскладывает окна: по одному у каждого края, по центру по высоте.
-     *
-     * @param edgePad отступ окна от края экрана, px
-     */
-    void layout(int width, int height, DotField field, float edgePad) {
+    void layout(DotField field) {
         this.field = field;
         int capacity = field.capacity();
         if (xs.length < capacity) {
@@ -42,9 +39,6 @@ final class DotRenderer {
             ys = new float[capacity];
             scales = new float[capacity];
         }
-        leftWindowX = edgePad;
-        rightWindowX = width - edgePad - field.windowWidth;
-        windowY = (height - field.windowHeight) / 2f;
     }
 
     boolean isLaidOut() {
@@ -54,10 +48,11 @@ final class DotRenderer {
     /**
      * @param ox     смещение поля по X, px (знак — куда текут точки)
      * @param oy     смещение поля по Y, px
+     * @param reach  до какого расстояния от грани видны точки, px
      * @param radius радиус точки полного размера, px
      * @param alpha  непрозрачность заливки 0..255
      */
-    void draw(Canvas canvas, float ox, float oy, float radius, int alpha, CuePalette palette) {
+    void draw(Canvas canvas, float ox, float oy, float reach, float radius, int alpha, CuePalette palette) {
         if (field == null || alpha <= 0) {
             return;
         }
@@ -66,12 +61,13 @@ final class DotRenderer {
         ringPaint.setColor(palette.ring);
         ringPaint.setAlpha(Math.round(alpha * palette.ringStrength));
 
-        // Оба окна смотрят в одно и то же поле — точки по краям текут синхронно
-        int count = field.compute(ox, oy, xs, ys, scales);
+        // Запас — чтобы точки у грани рисовались частично, а не исчезали целиком
+        int count = field.compute(ox, oy, reach, radius + ringWidth, xs, ys, scales);
         for (int i = 0; i < count; i++) {
             float r = radius * scales[i];
-            drawDot(canvas, leftWindowX + xs[i], windowY + ys[i], r);
-            drawDot(canvas, rightWindowX + xs[i], windowY + ys[i], r);
+            if (r >= minRadius) {
+                drawDot(canvas, xs[i], ys[i], r);
+            }
         }
     }
 
